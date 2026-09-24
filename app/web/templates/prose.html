@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{# Shared shell for the repo's markdown documents, so a second prose page does
+   not mean a second near-identical template. #}
+{% block title %}{{ page_title }} — Lexo{% endblock %}
+{% block content %}
+  <div class="prose">{{ text | render_markdown }}</div>
+{% endblock %}

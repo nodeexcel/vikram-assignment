@@ -97,10 +97,14 @@ def render_markdown(text: str) -> Markup:
             html.append(f"</{list_type}>")
             list_type = None
 
+    fence_re = re.compile(r"^```")
     marker_re = re.compile(r"^-\s+(.*)$")
     numbered_re = re.compile(r"^\d+\.\s+(.*)$")
     heading_re = re.compile(r"^(#{1,3})\s+(.*)$")
-    is_break = lambda s: s == "" or s == "---" or marker_re.match(s) or numbered_re.match(s) or heading_re.match(s)
+    is_break = lambda s: (
+        s == "" or s == "---" or bool(fence_re.match(s)) or bool(marker_re.match(s))
+        or bool(numbered_re.match(s)) or bool(heading_re.match(s))
+    )
 
     i = 0
     while i < len(lines):
@@ -117,6 +121,23 @@ def render_markdown(text: str) -> Markup:
             close_list()
             html.append("<hr>")
             i += 1
+            continue
+
+        # Fenced code block. Content is escaped and NOT run through the inline
+        # parser — a diagram's characters must survive verbatim. An unterminated
+        # fence runs to end of document rather than raising.
+        if fence_re.match(stripped):
+            flush_para()
+            close_list()
+            j = i + 1
+            block: list[str] = []
+            while j < len(lines) and not fence_re.match(lines[j].strip()):
+                block.append(lines[j])
+                j += 1
+            # str() around escape(): "<pre>" + Markup(...) would invoke Markup's
+            # __radd__ and escape the literal tags on the left.
+            html.append("<pre><code>" + str(escape("\n".join(block))) + "</code></pre>")
+            i = j + 1
             continue
 
         heading = heading_re.match(stripped)
@@ -158,7 +179,9 @@ def render_markdown(text: str) -> Markup:
 templates.env.filters["render_markdown"] = render_markdown
 
 SCENARIOS = ["guide_holds", "capex_turns"]
-WHERE_THIS_GOES_NEXT_PATH = Path(__file__).parent.parent.parent / "WHERE_THIS_GOES_NEXT.md"
+REPO_ROOT = Path(__file__).parent.parent.parent
+WHERE_THIS_GOES_NEXT_PATH = REPO_ROOT / "WHERE_THIS_GOES_NEXT.md"
+HOW_IT_WORKS_PATH = REPO_ROOT / "HOW_IT_WORKS.md"
 
 # Human responses to Tier 2 proposals, per scenario. In-memory only — this is a
 # single-user local demo (spec §12: no auth/multi-user), and proposal ids are
@@ -291,8 +314,23 @@ def where_this_goes_next(request: Request):
     """FEAT-20260924-1250-14. Rendered as plain preformatted text rather than
     pulling in a markdown-to-HTML dependency for one page — the content is
     what's graded, not its typography."""
-    text = WHERE_THIS_GOES_NEXT_PATH.read_text()
-    return templates.TemplateResponse(request, "where_this_goes_next.html", {"text": text})
+    return templates.TemplateResponse(
+        request,
+        "prose.html",
+        {"text": WHERE_THIS_GOES_NEXT_PATH.read_text(), "page_title": "Where this goes next"},
+    )
+
+
+@app.get("/how-it-works")
+def how_it_works(request: Request):
+    """The design walkthrough: what problem this solves, how, what it buys, and
+    the approaches weighed and rejected. Served from the same markdown the repo
+    carries, so there is one copy rather than two that drift."""
+    return templates.TemplateResponse(
+        request,
+        "prose.html",
+        {"text": HOW_IT_WORKS_PATH.read_text(), "page_title": "How it works"},
+    )
 
 
 @app.get("/timeline/{scenario}")

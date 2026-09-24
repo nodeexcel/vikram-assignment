@@ -18,9 +18,10 @@ has its own page.
 | What rules were derived, and where did each come from? | `/rules` |
 | What would the system do, when, and why? | `/timeline/guide_holds` and `/timeline/capex_turns` |
 
-Two more: `/determinism` re-runs both scenarios and shows the hashes side by side,
-and `/where-this-goes-next` covers where a learned layer would go and what the
-source could not supply.
+Three more: `/determinism` re-runs both scenarios and shows the hashes side by side,
+`/how-it-works` is the design walkthrough — how the system works, what it buys, and
+the approaches weighed and rejected — and `/where-this-goes-next` covers where a
+learned layer would go and what the source could not supply.
 
 ## Run it
 
@@ -91,4 +92,6 @@ been verified from a fresh virtualenv.
 - `docs/specs/FEAT-20260924-1250-lexo-trading-decision-system.md` — the build spec
 - `docs/adr/ADR-20260924-1250-tiered-decision-engine.md` — the architecture decision
 - `TODO.md` — every item, including the defects found and closed along the way
-- `WHERE_THIS_GOES_NEXT.md` — where this goes next
+- `HOW_IT_WORKS.md` — how the system works, why it is built this way, and the
+  approaches considered and rejected (served at `/how-it-works`)
+- `WHERE_THIS_GOES_NEXT.md` — where this goes next (served at `/where-this-goes-next`)
