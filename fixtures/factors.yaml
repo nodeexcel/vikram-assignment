@@ -15,6 +15,12 @@
 # NVDA's own weighted/promoted factor set additionally includes seven factors with
 # only an NVDA exposure; AMZN's own factors are added in FEAT-20260924-1250-05.
 factors:
+  # force is factor-level (spec §6.5), but NVDA's own Light Cone tags this
+  # mechanism Wave- while AMZN's tags it Tailwind (Wind family, per-quarter
+  # credit-spread conditions rather than a multi-year structural shift). Force
+  # is descriptive metadata, not a propagation gate (ring is), so this is
+  # recorded from NVDA's side and the disagreement is noted here rather than
+  # silently picking a side.
   - id: hyperscaler_capex_financing_shift
     ring: market
     force: wave
@@ -38,6 +44,23 @@ factors:
             cash flow. Demand has acquired a credit dependency it did not
             have two years ago.
         provenance_status: derived
+      AMZN:
+        local_id: 24
+        local_name: "Open Credit Funding AI Cloud Customers"
+        direction: positive
+        impact: 0.70
+        source:
+          doc: AMZN-memo
+          page: 9
+          quote: >-
+            HY OAS at 2.65% (Sep 11, 2026) and IG OAS near 81bp keep the
+            compute budgets of AWS's AI-native and venture-backed customers
+            funded, and let Amazon (S&P AA / Fitch AA-) raise $67B of debt
+            in H1 2026 without spreads widening, financing the roughly $59B
+            gap between 2026 capex and TTM operating cash flow. The same
+            window therefore offsets the capex cash drain and underwrites
+            the AI-lab customers.
+        provenance_status: derived
 
   - id: ai_infrastructure_buildout
     ring: sector
@@ -57,6 +80,22 @@ factors:
             $477.1B in 2026 to $843.2B by 2030 - a 15.3% compound rate,
             multiples of GDP growth, and enough that NVIDIA's revenue can
             grow without gaining a single share point.
+        provenance_status: derived
+      AMZN:
+        local_id: 12
+        local_name: "AI Infrastructure Demand Wave"
+        direction: positive
+        impact: 0.90
+        source:
+          doc: AMZN-memo
+          page: 11
+          quote: >-
+            Cloud infrastructure spending ran at $143B in Q2 2026, up 43%
+            YoY, as enterprise AI inference moves from pilots into
+            production, and supply rather than demand is described as the
+            binding constraint through at least 2027. The four largest US
+            hyperscalers plan about $725B of 2026 capex (+77% YoY), so the
+            demand is structural while the pace of spend is partly cyclical.
         provenance_status: derived
 
   # The remaining seven of NVDA's eight promoted/weighted factors. Each carries a
