@@ -2,8 +2,8 @@ import yaml
 import pytest
 from pydantic import ValidationError
 
-from app.engine.loader import FixtureLoadError, load_ticker_fixtures
-from app.engine.models import Rule, Source
+from app.engine.loader import FixtureLoadError, load_shared_factors, load_ticker_fixtures
+from app.engine.models import Factor, Rule, Source
 
 VALID_RESEARCH = {
     "ticker": "NVDA",
@@ -59,24 +59,9 @@ VALID_RULES = {
     "overrides": [],
 }
 
-VALID_FACTORS = {
-    "factors": [
-        {
-            "id": "guidance-bet",
-            "ticker": "NVDA",
-            "name": "Guidance Bet",
-            "ring": "internal",
-            "force": "wave",
-            "impact": 0.8,
-            "weight": 21,
-            "direction": "negative",
-            "source": {"doc": "NVDA-factor", "page": 12, "quote": "Guidance Bet, weight 21"},
-            "provenance_status": "derived",
-        }
-    ]
-}
-
 VALID_CATALYSTS = {"kill_switches": []}
+
+VALID_EXPOSURE_SOURCE = {"doc": "NVDA-factor", "page": 12, "quote": "some verified quote"}
 
 
 def _write_ticker_fixtures(tmp_path, ticker="nvda", **overrides):
@@ -86,7 +71,6 @@ def _write_ticker_fixtures(tmp_path, ticker="nvda", **overrides):
         "research.yaml": overrides.get("research", VALID_RESEARCH),
         "scenarios.yaml": overrides.get("scenarios", VALID_SCENARIOS),
         "rules.yaml": overrides.get("rules", VALID_RULES),
-        "factors.yaml": overrides.get("factors", VALID_FACTORS),
         "catalysts.yaml": overrides.get("catalysts", VALID_CATALYSTS),
     }
     for name, content in files.items():
@@ -94,12 +78,45 @@ def _write_ticker_fixtures(tmp_path, ticker="nvda", **overrides):
     return tmp_path
 
 
-def test_valid_fixtures_load(tmp_path):
+def _write_factors(tmp_path, factors):
+    (tmp_path / "factors.yaml").write_text(yaml.safe_dump({"factors": factors}))
+
+
+def _sector_factor(**overrides):
+    factor = {
+        "id": "hyperscaler_capex_financing_shift",
+        "ring": "market",
+        "force": "wave",
+        "label": "Hyperscaler capex turning credit-funded",
+        "exposures": {
+            "NVDA": {
+                "local_id": 22,
+                "local_name": "Hyperscaler Capex Financing Shift",
+                "direction": "negative",
+                "impact": 0.90,
+                "weight": 13,
+                "source": VALID_EXPOSURE_SOURCE,
+                "provenance_status": "derived",
+            },
+            "AMZN": {
+                "local_id": 24,
+                "local_name": "Open Credit Funding AI Cloud Customers",
+                "direction": "positive",
+                "impact": 0.70,
+                "source": VALID_EXPOSURE_SOURCE,
+                "provenance_status": "derived",
+            },
+        },
+    }
+    factor.update(overrides)
+    return factor
+
+
+def test_valid_ticker_fixtures_load(tmp_path):
     fixtures_dir = _write_ticker_fixtures(tmp_path)
     bundle = load_ticker_fixtures("NVDA", fixtures_dir)
     assert bundle.research.stance == "Hold"
     assert bundle.rules[0].id == "stop-195"
-    assert bundle.factors[0].weight == 21
 
 
 def test_missing_fixture_file_fails_fast(tmp_path):
@@ -119,15 +136,6 @@ def test_rule_without_source_fails_fast(tmp_path):
         load_ticker_fixtures("NVDA", fixtures_dir)
 
 
-def test_factor_partial_without_gap_note_fails_fast(tmp_path):
-    bad_factors = {
-        "factors": [{**VALID_FACTORS["factors"][0], "provenance_status": "partial", "gap_note": None}]
-    }
-    fixtures_dir = _write_ticker_fixtures(tmp_path, factors=bad_factors)
-    with pytest.raises(FixtureLoadError, match="invalid fixtures"):
-        load_ticker_fixtures("NVDA", fixtures_dir)
-
-
 def test_added_rule_with_fabricated_source_fails_fast(tmp_path):
     bad_rules = {
         "rules": [
@@ -138,16 +146,6 @@ def test_added_rule_with_fabricated_source_fails_fast(tmp_path):
                 "source": {"doc": "NVDA-memo", "page": 1, "quote": "not really"},
             }
         ],
-        "overrides": [],
-    }
-    fixtures_dir = _write_ticker_fixtures(tmp_path, rules=bad_rules)
-    with pytest.raises(FixtureLoadError, match="invalid fixtures"):
-        load_ticker_fixtures("NVDA", fixtures_dir)
-
-
-def test_added_rule_without_rationale_fails_fast(tmp_path):
-    bad_rules = {
-        "rules": [{**VALID_RULES["rules"][0], "provenance_status": "added", "source": None}],
         "overrides": [],
     }
     fixtures_dir = _write_ticker_fixtures(tmp_path, rules=bad_rules)
@@ -171,3 +169,42 @@ def test_added_provenance_rejects_a_source_directly():
             provenance_status="added",
             rationale="build shortcut",
         )
+
+
+def test_shared_sector_factor_with_two_exposures_loads(tmp_path):
+    _write_factors(tmp_path, [_sector_factor()])
+    factors = load_shared_factors(tmp_path)
+    assert len(factors) == 1
+    factor = factors[0]
+    assert factor.ring == "market"
+    assert set(factor.exposures) == {"NVDA", "AMZN"}
+    assert factor.exposures["NVDA"].direction == "negative"
+    assert factor.exposures["AMZN"].direction == "positive"
+
+
+def test_sector_factor_with_single_exposure_is_legal(tmp_path):
+    factor = _sector_factor(ring="sector")
+    del factor["exposures"]["AMZN"]
+    _write_factors(tmp_path, [factor])
+    factors = load_shared_factors(tmp_path)
+    assert len(factors[0].exposures) == 1
+
+
+def test_internal_factor_with_two_exposures_is_a_startup_error(tmp_path):
+    factor = _sector_factor(ring="internal")
+    _write_factors(tmp_path, [factor])
+    with pytest.raises(FixtureLoadError, match="internal-ring"):
+        load_shared_factors(tmp_path)
+
+
+def test_factor_exposure_missing_source_fails_fast(tmp_path):
+    factor = _sector_factor()
+    factor["exposures"]["NVDA"]["source"] = None
+    _write_factors(tmp_path, [factor])
+    with pytest.raises(FixtureLoadError, match="invalid factors"):
+        load_shared_factors(tmp_path)
+
+
+def test_factor_model_rejects_empty_exposures_directly():
+    with pytest.raises(ValidationError):
+        Factor(id="x", ring="market", force="wave", label="x", exposures={})

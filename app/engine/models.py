@@ -80,15 +80,41 @@ class KillSwitch(Sourced):
     consecutive_periods: int | None = Field(default=None, gt=0)
 
 
-class Factor(Sourced):
-    id: str
-    ticker: Ticker
-    name: str
-    ring: Literal["internal", "sector", "market"]
-    force: Literal["wind", "wave", "mud"]
+class Exposure(Sourced):
+    """One ticker's stake in a shared factor. local_id/local_name preserve that
+    ticker's own memo's numbering and wording verbatim — the two memos name and
+    number the same force differently, and the interface shows the source's words,
+    not ours."""
+
+    local_id: int | str
+    local_name: str
+    direction: Literal["positive", "negative"]
     impact: float = Field(ge=0, le=1)
     weight: int | None = Field(default=None, ge=0, le=100)
-    direction: Literal["positive", "negative"]
+
+
+class Factor(BaseModel):
+    """Shared, ticker-agnostic state (spec §6.5). Identity, ring and force are
+    recorded once; direction/impact/weight/provenance are per ticker under
+    exposures, because the same force can be bearish for one holding and bullish
+    for another."""
+
+    id: str
+    ring: Literal["internal", "sector", "market"]
+    force: Literal["wind", "wave", "mud"]
+    label: str
+    exposures: dict[Ticker, Exposure]
+
+    @model_validator(mode="after")
+    def _check_exposure_rules(self) -> "Factor":
+        if not self.exposures:
+            raise ValueError(f"factor {self.id}: must have at least one exposure")
+        if self.ring == "internal" and len(self.exposures) > 1:
+            raise ValueError(
+                f"factor {self.id}: internal-ring factors cannot propagate, so a multi-ticker "
+                f"exposure ({sorted(self.exposures)}) is a category mistake — see spec §6.5"
+            )
+        return self
 
 
 class ScenarioLeg(Sourced):
@@ -123,4 +149,3 @@ class FixtureBundle(BaseModel):
     rules: list[Rule]
     overrides: list[Override] = []
     kill_switches: list[KillSwitch] = []
-    factors: list[Factor]
