@@ -1,11 +1,16 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <title>Lexo Trading Decision System</title>
-</head>
-<body>
+{% extends "base.html" %}
+{% block title %}Lexo Trading Decision System{% endblock %}
+{% block content %}
   <h1>Lexo Trading Decision System</h1>
-  <p>Deploy scaffold is live. Engine and views land in later items.</p>
-</body>
-</html>
+  <p>A deterministic decision system derived from Lexo's NVIDIA research, showing its
+     own reasoning. Start with what the research concludes, then see every rule and
+     where it came from.</p>
+  <ul>
+    <li><a href="/research">What the research concludes</a> — verdict, stance, both
+        horizons, both scenario tables, the three dates that change the rating.</li>
+    <li><a href="/rules">Rules &amp; sources</a> — every rule with its verbatim
+        source quote, provenance status, and the factor-coverage disclosure.</li>
+    <li><a href="/determinism">Determinism check</a> — same inputs, same decisions,
+        shown twice, hashed, compared.</li>
+  </ul>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}What the research concludes — Lexo{% endblock %}
+{% block content %}
+  <h1>What the research concludes</h1>
+  <p>NVDA · reference price ${{ research.reference_price }} · as of {{ research.as_of }}</p>
+
+  <h2>Verdict — 3&ndash;5 year intrinsic</h2>
+  <p>{{ research.verdict.text }}</p>
+  <blockquote>{{ research.verdict.source.quote }}
+    <div class="source-cite">{{ research.verdict.source.doc }}, p.{{ research.verdict.source.page }}</div>
+  </blockquote>
+
+  <h2>Stance — 6&ndash;12 month tactical</h2>
+  <p><strong>{{ research.stance }}</strong> · conviction {{ research.conviction }} ·
+     position: {{ research.position }} · horizon: {{ research.horizon }}
+     {% if research.spring_state %}· spring state: {{ research.spring_state }}{% endif %}</p>
+  <blockquote>{{ research.source.quote }}
+    <div class="source-cite">{{ research.source.doc }}, p.{{ research.source.page }}</div>
+  </blockquote>
+
+  <p><em>The verdict and the stance are different measures on different clocks and
+     neither substitutes for the other — the memo is explicit about this, and this
+     page keeps them separate rather than collapsing them into one number.</em></p>
+
+  <h2>Intrinsic scenarios (3&ndash;5yr)</h2>
+  <table>
+    <thead><tr><th>Scenario</th><th>Probability</th><th>Price</th><th>vs reference</th></tr></thead>
+    <tbody>
+      {% for leg in intrinsic.legs %}
+      <tr>
+        <td>{{ leg.label }}</td>
+        <td>{{ (leg.probability * 100) | round(0) | int }}%</td>
+        <td>${{ leg.price }}</td>
+        <td>{{ leg.return_pct }}%</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td><strong>Probability-weighted</strong></td>
+        <td>100%</td>
+        <td>${{ intrinsic.weighted_price }}</td>
+        <td>{{ intrinsic.weighted_return_pct }}%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>12-month price targets (tactical)</h2>
+  <table>
+    <thead><tr><th>Scenario</th><th>Probability</th><th>Price target</th><th>Return</th></tr></thead>
+    <tbody>
+      {% for leg in tactical.legs %}
+      <tr>
+        <td>{{ leg.label }}</td>
+        <td>{{ (leg.probability * 100) | round(0) | int }}%</td>
+        <td>${{ leg.price }}</td>
+        <td>{{ leg.return_pct }}%</td>
+      </tr>
+      {% endfor %}
+      <tr>
+        <td><strong>Probability-weighted</strong></td>
+        <td>100%</td>
+        <td>&mdash;</td>
+        <td>{{ tactical.weighted_return_pct }}%</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>The dated triggers that change this rating</h2>
+  <table>
+    <thead><tr><th>When</th><th>Rule</th><th>Then</th></tr></thead>
+    <tbody>
+      {% for rule in dated_rules %}
+      <tr>
+        <td>{{ rule.event_date or (rule.trigger.window_start ~ ' to ' ~ rule.trigger.window_end) }}</td>
+        <td>{{ rule.name }}</td>
+        <td>{{ rule.action }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p>See <a href="/rules">rules &amp; sources</a> for the verbatim quote behind each one.</p>
+
+  <h2>Kill switches</h2>
+  <p>Separate from the weighted factor composition — each with its own watch cadence.</p>
+  <ul>
+    {% for ks in kill_switches %}
+    <li><strong>{{ ks.name }}</strong> ({{ ks.cadence }}, {{ ks.watch_period }}) — {{ ks.threshold }}</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

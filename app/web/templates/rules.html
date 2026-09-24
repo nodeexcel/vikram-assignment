@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Rules & sources — Lexo{% endblock %}
+{% block content %}
+  <h1>Rules &amp; sources</h1>
+  <p>Every rule below is transcribed from the memo, not invented — each one carries
+     the doc, page and verbatim quote it came from.</p>
+
+  <h2>Rules</h2>
+  {% for rule in rules %}
+  <div id="rule-{{ rule.id }}" style="margin-bottom: 1.5rem;">
+    <h3>{{ rule.name }}
+      {% if rule.provenance_status == 'derived' %}<span class="badge badge-derived">derived</span>{% endif %}
+      {% if rule.provenance_status == 'partial' %}<span class="badge badge-partial">partial</span>{% endif %}
+      {% if rule.provenance_status == 'added' %}<span class="badge badge-added">added</span>{% endif %}
+    </h3>
+    <p>action: <code>{{ rule.action }}</code>{% if rule.event_date %} · date: {{ rule.event_date }}{% endif %}
+       {% if rule.requires_existing_position %} · existing holders only{% endif %}</p>
+    {% if rule.source %}
+    <blockquote>{{ rule.source.quote }}
+      <div class="source-cite">{{ rule.source.doc }}, p.{{ rule.source.page }}</div>
+    </blockquote>
+    {% endif %}
+    {% if rule.gap_note %}
+    <p><strong>Gap the source itself admits:</strong> <em>{{ rule.gap_note }}</em></p>
+    {% endif %}
+  </div>
+  {% endfor %}
+
+  {% if overrides %}
+  <h2>Overrides</h2>
+  <p>A rule that fired but whose action never applied — the platform default is a
+     real, logged event, not a silent skip.</p>
+  {% for o in overrides %}
+  <div style="margin-bottom: 1rem;">
+    <p>Rule <a href="#rule-{{ o.rule_id }}"><code>{{ o.rule_id }}</code></a> fired.
+       Would have done: <em>{{ o.would_have_done }}</em>. Actual: <strong>{{ o.actual }}</strong>.
+       Actor: {{ o.actor }}.</p>
+    <blockquote>{{ o.reason }}</blockquote>
+  </div>
+  {% endfor %}
+  {% endif %}
+
+  <h2>Claims that back more than one rule</h2>
+  <p>Bidirectional: this page links rule &rarr; claim above; this section links
+     claim &rarr; the rules it produced.</p>
+  {% for claim in claims %}
+    {% if claim.rules | length > 1 %}
+    <div style="margin-bottom: 1rem;">
+      <blockquote>{{ claim.source.quote }}
+        <div class="source-cite">{{ claim.source.doc }}, p.{{ claim.source.page }}</div>
+      </blockquote>
+      <p>Produced:
+        {% for r in claim.rules %}<a href="#rule-{{ r.id }}">{{ r.name }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}
+      </p>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  <h2>Human-observed but not engine-propagated</h2>
+  <p>{{ custom_silicon.headline }}. Both sides sit on the <strong>Internal</strong>
+     ring in their own memo's factor diagram, and the engine only propagates
+     sector- or market-ring factors (spec §6.5) — so this linkage is real and
+     sourced, but the engine deliberately declines to act on it. Linking two
+     differently-named Internal factors ourselves would be inventing a mechanism
+     the research never states.</p>
+  <table>
+    <thead><tr><th>Ticker</th><th>Factor</th><th>Quote</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>NVDA</td>
+        <td>{{ custom_silicon.nvda.local_name }}</td>
+        <td><blockquote>{{ custom_silicon.nvda.quote }}
+          <div class="source-cite">{{ custom_silicon.nvda.doc }}, p.{{ custom_silicon.nvda.page }}</div>
+        </blockquote></td>
+      </tr>
+      <tr>
+        <td>AMZN</td>
+        <td>{{ custom_silicon.amzn.local_name }}</td>
+        <td><blockquote>{{ custom_silicon.amzn.quote }}
+          <div class="source-cite">{{ custom_silicon.amzn.doc }}, p.{{ custom_silicon.amzn.page }}</div>
+        </blockquote></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Factor coverage</h2>
+  <p><strong>{{ nvda_transcribed_count }} of 28</strong> of NVDA's Light Cone factors are
+     transcribed here: all 8 of the memo's own weighted/composition factors (weights
+     sum to exactly 100 of 100), plus 1 more (AI Infrastructure Buildout) used for the
+     cross-ticker fan-out demo. The remaining 19 &mdash; mostly sector- and market-wide
+     risk factors outside the weighted composition, e.g. export-control regimes,
+     memory pricing, Taiwan Strait concentration &mdash; are not transcribed into
+     fixtures. Ring is confirmed against the Light Cone diagram for 4 of the 9
+     ({{ factors | selectattr('ring', 'ne', 'unknown') | list | length }} shown with a
+     ring badge below); the rest carry weight and source but are marked
+     <span class="badge badge-unknown">unknown</span> ring rather than guessed, and are
+     excluded from propagation.</p>
+  <table>
+    <thead><tr><th>Factor</th><th>Ring</th><th>NVDA weight</th><th>NVDA direction</th></tr></thead>
+    <tbody>
+      {% for f in factors %}
+      <tr>
+        <td>{{ f.label }}</td>
+        <td>
+          {% if f.ring == 'unknown' %}<span class="badge badge-unknown">unknown</span>{% else %}{{ f.ring }}{% endif %}
+        </td>
+        <td>{{ f.exposures.NVDA.weight if f.exposures.NVDA and f.exposures.NVDA.weight else '—' }}</td>
+        <td>{{ f.exposures.NVDA.direction if f.exposures.NVDA else '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
