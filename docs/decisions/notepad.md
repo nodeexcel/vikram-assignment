@@ -637,3 +637,101 @@ pins dependencies and prepares everything a Render deploy needs (start command,
 `requirements.txt`), but the actual deploy step is blocked until the user connects a
 Render account. This will be flagged again when that step is reached rather than
 skipped or faked with a placeholder URL.
+
+---
+
+## Turn 6 — 2026-09-24 — Fan-out example was ring-illegal; spec corrected
+
+Raised by the implementor session while transcribing NVDA fixtures
+(FEAT-20260924-1250-04), by checking the spec's claims against the memo text rather
+than re-reading the spec. Correct catch. Verified independently here before acting.
+
+### What was wrong
+
+Spec §3 named this as the headline engine-driven fan-out demo:
+
+| | NVDA | AMZN |
+|---|---|---|
+| Hyperscalers building own silicon | #5 Inference Share Loss to Custom Silicon | #2 Custom Silicon Margin Moat |
+
+Re-extracted both memos' Light Cone diagrams on 2026-09-24 and confirmed: **NVDA #5
+is Internal ring and AMZN #2 is Internal ring.** Spec §6.5 propagates on sector and
+market factors only. So the pairing could never have driven the engine — it was a
+name match, not a mechanism the engine would catch.
+
+**Root cause of the error:** during Turn 3 the factor tables and the Light Cone ring
+diagram were read in separate passes, and the ring assignment was not carried back
+into the cross-ticker table. The force-type reading (Wave −/Wave +) was correct; the
+ring was simply never checked for that row. Lesson recorded in the spec: **ring, not
+name, decides propagation.**
+
+### What is actually ring-legal (verified)
+
+| Mechanism | NVDA | AMZN | Ring | Signs |
+|---|---|---|---|---|
+| Capex turning credit-funded | #22 Hyperscaler Capex Financing Shift — Wave − | #24 Open Credit Funding AI Cloud Customers — Tailwind | Market ↔ Market | **opposite** |
+| AI infrastructure buildout | #11 AI Infrastructure Buildout Wave — Wave + | #12 AI Infrastructure Demand Wave — Wave + | Sector ↔ Sector | same |
+
+The memo states the duplication itself, in the audit note on NVDA #16: *"This force
+is carried twice."* #16 sits on Sector, #22 on Market. AMZN's counterpart #24 is
+Market, so #22 is the correct NVDA side of the pairing.
+
+Also checked and recorded so it is not re-litigated: NVDA #13 Custom ASIC
+Substitution *is* Sector ring, but AMZN's factor set carries no sector-ring
+counterpart, so it has nothing to fan out to.
+
+### Options considered
+
+**Relax the ring rule to match on name or theme.** Rejected. It would make the engine
+propagate because *we* decided two differently-named Internal factors are the same
+force. The research never says so. That is an invented linkage, which is the one
+thing the brief prohibits, and it would trade a sourced mechanism for a guessed one
+to save a demo. It also touches an accepted ADR.
+
+**Use the ring-legal pairings and drop custom silicon.** Rejected as incomplete — it
+throws away the most striking finding in the two memos.
+
+**Use the ring-legal pairings and keep custom silicon as a labelled non-propagating
+observation.** Accepted. See D13.
+
+### Decisions this turn
+
+- **D13 — Engine fan-out uses the two ring-legal pairings; the custom-silicon
+  asymmetry is shown but explicitly not propagated.** It is displayed with both
+  source quotes and labelled as a human-observed linkage the engine declines to act
+  on, with the reason in plain language. Rationale: a finding that traces to source
+  perfectly but which our own rule will not act on is *better* evidence of the
+  discipline than the original claim was — and it mirrors what the memo does when it
+  admits it never sourced an options chain. Showing where the reasoning stops is more
+  credible than dropping the inconvenient case.
+- **D14 — Include a same-sign fan-out pairing as well** (AI infrastructure buildout,
+  Sector ↔ Sector, both positive), so the interface does not imply fan-out is always
+  contrarian. Costs nothing; the data is already being transcribed.
+- **D15 — A factor is shared, ticker-agnostic state.** Identity, ring and force are
+  recorded once; direction, impact, weight and provenance are per ticker, under an
+  `exposures` map. Per-ticker `local_id` and `local_name` preserve each memo's own
+  numbering and wording, because the two memos name the same force differently and
+  the interface must show the source's words, not ours. Spec §6.5 now carries the
+  explicit shape.
+
+### Items logged
+
+- `BUG-20260924-1322-15` — the spec defect. Closed in this turn; spec §3 corrected.
+- `FEAT-20260924-1322-16` — surface custom silicon as sourced-but-non-propagating.
+  Open; implement within FEAT-20260924-1250-12.
+- `BUG-20260924-1322-17` — factor schema needs the ticker-agnostic shape. Open;
+  blocks FEAT-20260924-1250-08.
+
+### Note on the schema divergence
+
+Spec §6.5 already said `direction` **per ticker**; the schema built in
+FEAT-20260924-1250-03 stored a single ticker and direction. The spec was right and
+the implementation drifted, so the spec has been made concrete with an explicit YAML
+shape rather than a prose phrase that could be read two ways.
+
+### Process note
+
+The implementor stopped and logged before continuing, per CLAUDE.md Module 7, rather
+than fixing in passing. That is the behaviour that caught this — the error would have
+been invisible in a working demo, because a hand-wired fan-out would have looked
+identical on screen to a ring-derived one.

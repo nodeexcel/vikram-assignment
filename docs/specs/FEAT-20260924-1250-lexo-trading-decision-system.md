@@ -99,18 +99,52 @@ Rack-Scale Platform Lock-In 17 · Demand Is Credit-Funded 13 · Founder-Led/Unpl
 Succession 8 · Operating Leverage Already Spent 5. *"Three factors sit on the external
 circle and together carry 54 of the 100 weight points."*
 
-**Cross-ticker asymmetry (drives the fan-out demo).** Verified by reading both memos'
-factor lists:
+**Cross-ticker factor pairings.** Ring assignments re-verified against both memos'
+Light Cone diagrams on 2026-09-24. **Ring, not name, decides whether a pairing can
+propagate** — §6.5 fans out on sector and market factors only.
 
-| Mechanism | NVDA | AMZN |
-|---|---|---|
-| Hyperscalers building own silicon | #5 Inference Share Loss to Custom Silicon — **Wave −** | #2 Custom Silicon Margin Moat — **Wave +** |
-| AI infrastructure buildout | #11 AI Infrastructure Buildout Wave — Wave + (Sector) | #12 AI Infrastructure Demand Wave — Wave + (Sector) |
-| Capex funded by credit | #16 Hyperscaler Capex Turns Debt-Funded — **Wave −** | #24 Open Credit Funding AI Cloud Customers — **Tailwind (Market)** |
-| Capex level | demand driver | #6 AI Capex Cash Drain — **Wave − (Internal)** |
+*Corrected 2026-09-24. An earlier revision of this table named the custom-silicon
+pairing as the headline engine-driven demo. That was wrong: both sides sit on the
+Internal ring and cannot propagate under our own rule. See BUG-20260924-1322-15.*
 
-The same real-world mechanism carries **opposite sign** in the two memos. One event
-propagates to two positions in two directions, entirely derived.
+**Engine-driven fan-out — ring-legal, use these:**
+
+| Mechanism | NVDA | AMZN | Ring | Signs |
+|---|---|---|---|---|
+| Hyperscaler capex turning credit-funded | #22 Hyperscaler Capex Financing Shift — **Wave −** | #24 Open Credit Funding AI Cloud Customers — **Tailwind** | Market ↔ Market | **opposite** |
+| AI infrastructure buildout | #11 AI Infrastructure Buildout Wave — Wave + | #12 AI Infrastructure Demand Wave — Wave + | Sector ↔ Sector | same |
+
+The capex-financing pairing is the headline: one event, two positions, **opposite
+directions**, both sourced. The AI-buildout pairing is included deliberately as a
+same-sign case, so the interface does not imply that fan-out is always contrarian.
+
+NVDA carries the capex-financing force at two rings on purpose, and the memo says so
+in its own audit note on #16: *"This force is carried twice."* #16 Hyperscaler Capex
+Turns Debt-Funded sits on Sector, #22 Hyperscaler Capex Financing Shift on Market.
+Use #22 for the AMZN pairing, since AMZN's counterpart #24 is Market ring.
+
+**Sourced but NOT engine-propagated — must be shown, and shown as such:**
+
+| Mechanism | NVDA | AMZN | Ring |
+|---|---|---|---|
+| Hyperscalers building their own silicon | #5 Inference Share Loss to Custom Silicon — **Wave −** | #2 Custom Silicon Margin Moat — **Wave +** | Internal ↔ Internal |
+
+This is the most striking asymmetry in the two memos — the same real-world mechanism
+is a threat to one holding and a moat to the other, each stated in its own source. It
+is also **Internal ring on both sides, so the engine does not and must not propagate
+it.** Linking the two would mean deciding for ourselves that these are the same force;
+the research never says so, and inventing that linkage is precisely what the brief
+prohibits.
+
+Show it anyway, labelled as a human-observed linkage the engine deliberately declines
+to act on, with both quotes. A system that shows where its own reasoning stops is more
+credible than one that quietly drops the inconvenient case — the same move the memo
+makes when it admits it never sourced an options chain. Tracked as
+FEAT-20260924-1322-16.
+
+Also noted, not paired: NVDA #13 Custom ASIC Substitution *is* Sector ring, but AMZN's
+factor set carries no sector-ring counterpart for it, so it has nothing to fan out to.
+Recorded so this is not re-litigated.
 
 ---
 
@@ -243,13 +277,47 @@ here is why it did not."
 
 ### 6.5 Tier 2 factors
 
-Factors carry `ring` (internal | sector | market), `force` (wind | wave | mud),
-`impact` 0–1, `weight` where the memo assigns one, and `direction` per ticker.
+**A factor is shared, ticker-agnostic state. It does not belong to a ticker.** Each
+factor carries its ring, force type and identity once; direction, impact, weight and
+provenance are recorded **per ticker**, because the same force is bearish for one
+holding and bullish for another. A schema with a single `ticker` and a single
+`direction` field cannot express the fan-out and will need reworking — this is what
+BUG-20260924-1322-17 records.
 
-A `factor_shift` event on a **sector** or **market** factor re-rates every ticker
-whose factor set includes that factor — this is the fan-out, and it is read off the
-ring assignment rather than modelled by us. Output is a **proposal**:
-`{factor, affected_tickers, direction_per_ticker, reasoning, source}`.
+```yaml
+id: hyperscaler_capex_financing_shift
+ring: market                  # internal | sector | market
+force: wave                   # wind | wave | mud
+label: "Hyperscaler capex turning credit-funded"
+exposures:
+  NVDA:
+    local_id: 22
+    local_name: "Hyperscaler Capex Financing Shift"
+    direction: negative
+    impact: 0.80
+    weight: 13                # omit where the memo assigns none
+    source: {doc: NVDA-memo, page: 6, quote: "..."}
+  AMZN:
+    local_id: 24
+    local_name: "Open Credit Funding AI Cloud Customers"
+    direction: positive
+    impact: ...
+    source: {doc: AMZN-memo, page: ..., quote: "..."}
+```
+
+`local_id` and `local_name` exist because the two memos number and name the same
+force differently. The shared `id` is ours; every per-ticker name and number stays
+verbatim from its own source, and the interface shows the source's wording, not ours.
+
+**Ring decides propagation, not name.** A `factor_shift` event on a factor whose ring
+is `sector` or `market` re-rates every ticker in that factor's `exposures` — read off
+the ring assignment rather than modelled by us. A factor on the `internal` ring never
+propagates, **even when an equivalent force appears under a different name in another
+ticker's internal set.** Matching those would be our judgement, not the research's.
+See §3 for the one known case and how it is surfaced instead.
+
+Output is a **proposal**: `{factor, affected_tickers, direction_per_ticker, reasoning,
+source_per_ticker}`.
 
 **A proposal never mutates a position.** It waits for accept or reject. Both outcomes
 append to the decision log with the actor recorded. This constraint comes from the
