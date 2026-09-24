@@ -36,7 +36,7 @@ def load_ticker_fixtures(ticker: Ticker, fixtures_dir: Path = FIXTURES_DIR) -> F
     catalysts = _read_yaml(base / "catalysts.yaml")
 
     try:
-        return FixtureBundle(
+        bundle = FixtureBundle(
             ticker=ticker,
             research=research,
             scenarios=scenarios.get("scenarios", []),
@@ -46,6 +46,18 @@ def load_ticker_fixtures(ticker: Ticker, fixtures_dir: Path = FIXTURES_DIR) -> F
         )
     except ValidationError as e:
         raise FixtureLoadError(f"invalid fixtures for {ticker} in {base}: {e}") from e
+
+    # BUG-20260924-1421-19: an override that targets a rule_id nothing defines
+    # suppresses nothing — it's a record in a file, not a demonstrated mechanism.
+    rule_ids = {r.id for r in bundle.rules}
+    for override in bundle.overrides:
+        if override.rule_id not in rule_ids:
+            raise FixtureLoadError(
+                f"{ticker}: override {override.id!r} targets rule_id {override.rule_id!r}, "
+                f"which no rule in {base / 'rules.yaml'} defines"
+            )
+
+    return bundle
 
 
 def load_shared_factors(fixtures_dir: Path = FIXTURES_DIR) -> list[Factor]:

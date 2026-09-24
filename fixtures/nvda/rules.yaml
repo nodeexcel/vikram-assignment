@@ -1,12 +1,32 @@
 rules:
+  # Platform default the memo overrides (BUG-20260924-1421-19). Present from the
+  # first run, sourced to the Execution Plan table, so the override below has a
+  # real target — "rule fired, was overridden, here is why" needs both halves.
+  - id: platform-neutral-spring-starter-position
+    name: "Platform default: Neutral spring maps to a starter position"
+    ticker: NVDA
+    trigger:
+      metric: spring_state
+      comparator: eq
+      threshold: "Neutral"
+    action: open_starter_position
+    source:
+      doc: NVDA-memo
+      page: 46
+      quote: >-
+        Spring state Neutral. Platform rule for Neutral: Starter position
+        - deliberately overridden.
+    provenance_status: derived
+
   - id: reentry-buy-full-weight
     name: "Re-entry: FY2028 commentary near 70% with backlog detail"
     ticker: NVDA
     event_date: 2026-11-17
     trigger:
-      metric: fy2028_commentary_pct_with_backlog_detail
+      metric: fy2028_commentary_pct
       comparator: gte
       threshold: 70
+      requires_backlog_detail: true
     action: buy_full_weight
     source:
       doc: NVDA-memo
@@ -41,6 +61,8 @@ rules:
         $200.09.
     provenance_status: derived
 
+  # BUG-20260924-1421-20: explicit upper bound (45 <= commentary < 70) so this
+  # rule cannot fire alongside reentry-buy-full-weight on the same date.
   - id: base-row-neither-confirms-nor-breaks
     name: "Base row: FY2028 commentary neither confirms nor breaks the guide"
     ticker: NVDA
@@ -49,7 +71,7 @@ rules:
       metric: fy2028_commentary_pct
       comparator: gte
       threshold: 45
-      window: "45-70%, neither the re-entry nor the bear-row condition fires"
+      upper_threshold: 70
     action: move_to_base_row_drift_200_09
     source:
       doc: NVDA-memo
@@ -71,7 +93,8 @@ rules:
       metric: hyperscaler_capex_flat_or_down_count
       comparator: gte
       threshold: 2
-      window: "2027-01-26 to 2027-02-06 (estimated)"
+      window_start: 2027-01-26
+      window_end: 2027-02-06
     action: exit_short
     source:
       doc: NVDA-memo
@@ -86,11 +109,11 @@ rules:
   - id: sell-formal-guide-below-45
     name: "Sell: formal FY2028 guide comes in below 45% growth"
     ticker: NVDA
+    event_date: 2027-02-24
     trigger:
       metric: formal_fy2028_guide_pct
       comparator: lt
       threshold: 45
-      window: "on or around 2027-02-24 (estimated)"
     action: sell
     source:
       doc: NVDA-memo
@@ -104,12 +127,13 @@ rules:
   - id: stop-195-two-consecutive-weekly-closes
     name: "Stop: $195.00 on two consecutive weekly closes"
     ticker: NVDA
-    applies_when: "position != none"
+    requires_existing_position: true
     trigger:
       metric: price_close
       comparator: lte
       threshold: 195.00
       consecutive_periods: 2
+      period_unit: weekly
     action: stop_exit
     source:
       doc: NVDA-memo

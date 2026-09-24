@@ -3,7 +3,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.engine.loader import FixtureLoadError, load_shared_factors, load_ticker_fixtures
-from app.engine.models import Factor, Rule, Source
+from app.engine.models import Factor, Rule, Source, Trigger
 
 VALID_RESEARCH = {
     "ticker": "NVDA",
@@ -44,12 +44,13 @@ VALID_RULES = {
             "id": "stop-195",
             "name": "$195 stop, two consecutive weekly closes",
             "ticker": "NVDA",
-            "applies_when": "position != none",
+            "requires_existing_position": True,
             "trigger": {
                 "metric": "price_close",
                 "comparator": "lte",
                 "threshold": 195.0,
                 "consecutive_periods": 2,
+                "period_unit": "weekly",
             },
             "action": "stop_exit",
             "source": {"doc": "NVDA-memo", "page": 46, "quote": "$195.00 on two consecutive weekly closes"},
@@ -208,3 +209,73 @@ def test_factor_exposure_missing_source_fails_fast(tmp_path):
 def test_factor_model_rejects_empty_exposures_directly():
     with pytest.raises(ValidationError):
         Factor(id="x", ring="market", force="wave", label="x", exposures={})
+
+
+def test_unknown_ring_factor_with_two_exposures_is_a_startup_error(tmp_path):
+    factor = _sector_factor(ring="unknown")
+    _write_factors(tmp_path, [factor])
+    with pytest.raises(FixtureLoadError, match="unknown-ring"):
+        load_shared_factors(tmp_path)
+
+
+def test_override_with_unresolved_rule_id_fails_fast(tmp_path):
+    bad_rules = {
+        "rules": VALID_RULES["rules"],
+        "overrides": [
+            {
+                "id": "override-1",
+                "rule_id": "no-such-rule",
+                "would_have_done": "x",
+                "actual": "y",
+                "reason": "z",
+                "actor": "memo",
+                "source": {"doc": "NVDA-memo", "page": 1, "quote": "q"},
+                "provenance_status": "derived",
+            }
+        ],
+    }
+    fixtures_dir = _write_ticker_fixtures(tmp_path, rules=bad_rules)
+    with pytest.raises(FixtureLoadError, match="targets rule_id"):
+        load_ticker_fixtures("NVDA", fixtures_dir)
+
+
+def test_override_with_resolved_rule_id_loads(tmp_path):
+    bad_rules = {
+        "rules": VALID_RULES["rules"],
+        "overrides": [
+            {
+                "id": "override-1",
+                "rule_id": "stop-195",
+                "would_have_done": "x",
+                "actual": "y",
+                "reason": "z",
+                "actor": "memo",
+                "source": {"doc": "NVDA-memo", "page": 1, "quote": "q"},
+                "provenance_status": "derived",
+            }
+        ],
+    }
+    fixtures_dir = _write_ticker_fixtures(tmp_path, rules=bad_rules)
+    bundle = load_ticker_fixtures("NVDA", fixtures_dir)
+    assert bundle.overrides[0].rule_id == "stop-195"
+
+
+def test_consecutive_periods_without_period_unit_is_rejected():
+    with pytest.raises(ValidationError, match="period_unit"):
+        Trigger(metric="price_close", comparator="lte", threshold=195.0, consecutive_periods=2)
+
+
+def test_upper_threshold_expresses_a_closed_range():
+    trigger = Trigger(metric="fy2028_commentary_pct", comparator="gte", threshold=45, upper_threshold=70)
+    assert trigger.threshold == 45
+    assert trigger.upper_threshold == 70
+
+
+def test_ordering_comparator_against_string_threshold_is_rejected():
+    with pytest.raises(ValidationError, match="orderable"):
+        Trigger(metric="spring_state", comparator="gte", threshold="Neutral")
+
+
+def test_categorical_eq_comparator_accepts_string_threshold():
+    trigger = Trigger(metric="spring_state", comparator="eq", threshold="Neutral")
+    assert trigger.threshold == "Neutral"

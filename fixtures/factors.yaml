@@ -2,10 +2,18 @@
 # are recorded once; direction/impact/weight/provenance are per ticker under
 # exposures. Ring decides propagation, not name.
 #
+# Ring comes from the Light Cone diagram ONLY — never from the theme report's
+# composition "zone" (BUG-20260924-1421-18). Zone (intrinsic/ecosystem/external) is
+# a controllability split over the 8 weighted factors; Light Cone ring
+# (internal/sector/market) is a propagation-scope split over all 28, and the two
+# disagree for real factors here. Where a promoted factor has no confident Light
+# Cone match, ring is "unknown" — excluded from propagation like internal, rather
+# than guessed.
+#
 # The two factors below (hyperscaler_capex_financing_shift, ai_infrastructure_buildout)
 # are the only verified ring-legal (sector/market) cross-ticker pairings — see spec §3.
-# NVDA's own weighted/promoted factor set additionally includes six factors with only
-# an NVDA exposure; AMZN's own factors are added in FEAT-20260924-1250-05.
+# NVDA's own weighted/promoted factor set additionally includes seven factors with
+# only an NVDA exposure; AMZN's own factors are added in FEAT-20260924-1250-05.
 factors:
   - id: hyperscaler_capex_financing_shift
     ring: market
@@ -60,7 +68,7 @@ factors:
   # report's promoted-factor write-ups do not state; left unset rather than guessed.
 
   - id: guidance-bet
-    ring: market
+    ring: unknown
     label: "Price, Terminal Value and the Guidance Bet"
     exposures:
       NVDA:
@@ -82,31 +90,39 @@ factors:
             70x challengers and the debt-funded builders.
         provenance_status: derived
 
+  # BUG-20260924-1421-18: ring corrected to internal, sourced to Light Cone #5 —
+  # NOT inferred from the theme report's "zone external" tag. Zone and ring are
+  # different axes (controllability vs propagation scope) and disagree here.
+  # Weight (20) is cross-referenced from the theme report's fc_01, which the memo's
+  # own composition write-up (p.26) also confirms in prose ("the single largest
+  # external factor in the composition, carried at weight 20").
   - id: share-ceded-to-custom-silicon
-    ring: market
+    ring: internal
+    force: wave
     label: "Share Ceded to Custom Silicon"
     exposures:
       NVDA:
         local_id: fc_01
         local_name: "Share Ceded to Custom Silicon"
         direction: negative
+        impact: 0.90
         weight: 20
         source:
-          doc: NVDA-theme
-          page: 28
+          doc: NVDA-memo
+          page: 9
           quote: >-
-            fc_01 Share Ceded to Custom Silicon - zone external, weight
-            20. Custom AI silicon pays the enablers rather than the
-            contestants: the durable money is in design services,
-            connectivity content per XPU, packaging and HBM - layers
-            billed per accelerator DESIGN and per unit rather than per
-            winner - while the clearest loser is not the market leader but
-            the merchant second source bidding for the same
-            diversification budget.
+            Custom ASIC shipments growing 44.6% against 16.1% for merchant
+            GPUs, with parity projected by 2027, concentrated in exactly
+            the stable-model inference workload a purpose-built part wins.
+            Hyperscale - the cohort building TPU, Trainium, Maia and MTIA
+            - is 50.9% of company revenue. This is the single structural
+            threat every recent large bet is defending against.
         provenance_status: derived
 
+  # No confident Light Cone match found for this promoted factor (BUG-18's fix
+  # rule: mark ring unknown rather than infer it from the theme report's zone).
   - id: rack-scale-platform-lock-in
-    ring: sector
+    ring: unknown
     label: "Rack-Scale Platform Lock-In"
     exposures:
       NVDA:
@@ -126,30 +142,32 @@ factors:
             indifferent to which architecture wins.
         provenance_status: derived
 
+  # Exact name match to Light Cone #10 "Self-Funded Demand Loop" (Internal, Mud) —
+  # ring/force/impact sourced there, not inferred from the theme report's zone.
   - id: self-funded-demand-loop
-    ring: sector
+    ring: internal
+    force: mud
     label: "Self-Funded Demand Loop"
     exposures:
       NVDA:
         local_id: fc_08
         local_name: "Self-Funded Demand Loop"
         direction: negative
+        impact: 0.90
         weight: 7
         source:
-          doc: NVDA-theme
-          page: 29
+          doc: NVDA-memo
+          page: 11
           quote: >-
-            fc_08 Self-Funded Demand Loop - zone ecosystem, weight 7.
-            Vendor financing moves the money to whoever RECEIVES the
-            instrument - credit-enhanced landlords, underwritten neoclouds
-            and the fee layer assembling third-party pools - and takes it
-            from whoever must WRITE it with a smaller balance sheet; the
-            cost is invisible on every income statement until a rating
-            method or a refused extension makes it visible.
+            About $60B of cash deployed into equity investments since
+            FY2026 ($17,502M FY2026 plus $42,400M H1 FY2027) and roughly
+            $39B of deal consideration across Groq, Hugging Face and
+            Poolside - all directed at NVIDIA's own customer base. Returns
+            arrive as non-operating income rather than revenue.
         provenance_status: derived
 
   - id: founder-led-execution-unplanned-succession
-    ring: internal
+    ring: unknown
     label: "Founder-Led Execution, Unplanned Succession"
     exposures:
       NVDA:
@@ -171,7 +189,7 @@ factors:
         provenance_status: derived
 
   - id: earnings-quality-investment-book
-    ring: internal
+    ring: unknown
     label: "Earnings Quality and the Investment Book"
     exposures:
       NVDA:
@@ -195,7 +213,7 @@ factors:
         provenance_status: derived
 
   - id: operating-leverage-already-spent
-    ring: internal
+    ring: unknown
     label: "Operating Leverage Already Spent"
     exposures:
       NVDA:

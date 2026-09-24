@@ -46,16 +46,39 @@ class Sourced(BaseModel):
 class Trigger(BaseModel):
     metric: str
     comparator: Literal["gte", "lte", "gt", "lt", "eq"]
-    threshold: float
-    window: str | None = None
+    # str threshold is for categorical metrics compared with eq (e.g.
+    # spring_state == "Neutral"); gte/lte/gt/lt only make sense against a float.
+    threshold: float | str
+    # Upper bound for a closed range: threshold <= metric < upper_threshold. Unset
+    # means the comparator alone decides (open-ended). BUG-20: without this, two
+    # single-sided rules over the same metric can silently overlap.
+    upper_threshold: float | None = None
+    window_start: date | None = None
+    window_end: date | None = None
     consecutive_periods: int | None = Field(default=None, gt=0)
+    # BUG-21: a bare count is ambiguous (2 daily closes != 2 weekly closes).
+    period_unit: Literal["daily", "weekly", "monthly", "quarterly"] | None = None
+    # ISS-23: was folded into the metric name (..._with_backlog_detail); now a
+    # separate, explicit condition so every 2026-11-17 rule reads the same metric.
+    requires_backlog_detail: bool = False
+
+    @model_validator(mode="after")
+    def _check_consecutive_periods_has_unit(self) -> "Trigger":
+        if self.consecutive_periods is not None and self.period_unit is None:
+            raise ValueError("consecutive_periods requires period_unit — a bare count is ambiguous (BUG-20260924-1421-21)")
+        if self.comparator != "eq" and isinstance(self.threshold, str):
+            raise ValueError(f"comparator={self.comparator!r} against a string threshold is not orderable — only eq may compare strings")
+        return self
 
 
 class Rule(Sourced):
     id: str
     name: str
     ticker: Ticker | None = None
-    applies_when: str | None = None
+    # ISS-22: was a free-text string ("position != none") the engine can't
+    # evaluate. The only real precondition in this source is "existing holders
+    # only" (the $195 stop), so this is the one structured flag needed for it.
+    requires_existing_position: bool = False
     trigger: Trigger
     action: str
     event_date: date | None = None
@@ -103,7 +126,14 @@ class Factor(BaseModel):
     for another."""
 
     id: str
-    ring: Literal["internal", "sector", "market"]
+    # BUG-20260924-1421-18: ring must come from the Light Cone diagram only — never
+    # inferred from the theme report's composition "zone" (intrinsic/ecosystem/
+    # external is a controllability split over the 8 weighted factors; Light Cone's
+    # internal/sector/market is a propagation-scope split over all 28, and they
+    # come apart for real factors, e.g. fc_01 is zone=external but Light Cone #5
+    # internal). "unknown" means no confident Light Cone entry was found for this
+    # promoted factor — it is excluded from propagation exactly like internal.
+    ring: Literal["internal", "sector", "market", "unknown"]
     # Force type is a Light Cone (28-factor diagram) attribute. The memo and theme
     # report do not state it for several of the 8 promoted/weighted factors — left
     # unset rather than guessed for those, per "derived, not invented".
@@ -115,9 +145,9 @@ class Factor(BaseModel):
     def _check_exposure_rules(self) -> "Factor":
         if not self.exposures:
             raise ValueError(f"factor {self.id}: must have at least one exposure")
-        if self.ring == "internal" and len(self.exposures) > 1:
+        if self.ring in ("internal", "unknown") and len(self.exposures) > 1:
             raise ValueError(
-                f"factor {self.id}: internal-ring factors cannot propagate, so a multi-ticker "
+                f"factor {self.id}: {self.ring}-ring factors cannot propagate, so a multi-ticker "
                 f"exposure ({sorted(self.exposures)}) is a category mistake — see spec §6.5"
             )
         return self
