@@ -169,10 +169,19 @@ class ScenarioSet(BaseModel):
     weighted_return_pct: float
 
 
+class Verdict(Sourced):
+    """The 3-5yr intrinsic verdict — a distinct claim from the 6-12mo tactical
+    stance (Research's own source/provenance_status), with its own citation. The
+    memo is explicit these are different measures on different clocks."""
+
+    text: str
+
+
 class Research(Sourced):
     ticker: Ticker
     as_of: date
     reference_price: float = Field(gt=0)
+    verdict: Verdict
     stance: str
     conviction: str
     position: str

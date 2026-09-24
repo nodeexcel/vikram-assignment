@@ -1,6 +1,19 @@
 ticker: NVDA
 as_of: 2026-09-08
 reference_price: 230.36
+verdict:
+  text: >-
+    Diamond in Air | Ocean | Luminous - N-of-1, 83/100, multibagger gate
+    BORDERLINE; trajectory Bull 25% / Base 50% / Bear 25% (15% competitive,
+    10% geopolitical)
+  source:
+    doc: NVDA-memo
+    page: 3
+    quote: >-
+      Lexo Verdict (3-5yr intrinsic): Diamond in Air | Ocean | Luminous -
+      N-of-1, 83/100, multibagger gate BORDERLINE; trajectory Bull 25% ·
+      Base 50% · Bear 25% (15% competitive, 10% geopolitical).
+  provenance_status: derived
 stance: Hold
 conviction: Low
 position: none

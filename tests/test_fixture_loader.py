@@ -9,6 +9,11 @@ VALID_RESEARCH = {
     "ticker": "NVDA",
     "as_of": "2026-09-08",
     "reference_price": 230.36,
+    "verdict": {
+        "text": "Diamond in Air | Ocean | Luminous - N-of-1, 83/100",
+        "source": {"doc": "NVDA-memo", "page": 3, "quote": "Lexo Verdict: Diamond in Air | Ocean | Luminous."},
+        "provenance_status": "derived",
+    },
     "stance": "Hold",
     "conviction": "Low",
     "position": "none",
