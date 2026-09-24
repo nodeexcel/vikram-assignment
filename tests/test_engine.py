@@ -89,6 +89,43 @@ def test_exit_short_needs_at_least_two_hyperscalers(nvda_rules):
     assert "exit-short-hyperscaler-capex" not in [e.rule_id for e in log.entries]
 
 
+def test_sell_fires_below_45_not_at_45(nvda_rules):
+    event = Event(
+        date=date(2027, 2, 24),
+        kind="disclosure",
+        ticker="NVDA",
+        payload={"formal_fy2028_guide_pct": 44.9},
+    )
+    log = run(nvda_rules, [event])
+    assert "sell-formal-guide-below-45" in [e.rule_id for e in log.entries]
+
+    event = Event(
+        date=date(2027, 2, 24),
+        kind="disclosure",
+        ticker="NVDA",
+        payload={"formal_fy2028_guide_pct": 45},
+    )
+    log = run(nvda_rules, [event])
+    assert "sell-formal-guide-below-45" not in [e.rule_id for e in log.entries]
+
+
+def test_rules_ignore_events_on_a_different_ticker(nvda_rules):
+    event = Event(
+        date=date(2026, 11, 17),
+        kind="guidance",
+        ticker="AMZN",
+        payload={"fy2028_commentary_pct": 90, "backlog_detail": True},
+    )
+    log = run(nvda_rules, [event])
+    assert log.entries == []
+
+
+def test_each_rule_fires_at_most_once(nvda_rules):
+    events = [_guidance_event(72, backlog_detail=True), _guidance_event(80, backlog_detail=True)]
+    log = run(nvda_rules, events)
+    assert [e.rule_id for e in log.entries] == ["reentry-buy-full-weight"]
+
+
 def test_stop_does_not_fire_with_no_position(nvda_rules):
     events = [
         Event(date=date(2026, 10, 5), kind="price_close", ticker="NVDA", payload={"price_close": 190}),
