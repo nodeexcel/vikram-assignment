@@ -6,7 +6,7 @@
 
   <h2>Verdict — 3&ndash;5 year intrinsic</h2>
   <p>{{ research.verdict.text }}</p>
-  <blockquote>{{ research.verdict.source.quote }}
+  <blockquote>{{ research.verdict.source.quote | render_quote }}
     <div class="source-cite">{{ research.verdict.source.doc }}, p.{{ research.verdict.source.page }}</div>
   </blockquote>
 
@@ -14,7 +14,7 @@
   <p><strong>{{ research.stance }}</strong> · conviction {{ research.conviction }} ·
      position: {{ research.position }} · horizon: {{ research.horizon }}
      {% if research.spring_state %}· spring state: {{ research.spring_state }}{% endif %}</p>
-  <blockquote>{{ research.source.quote }}
+  <blockquote>{{ research.source.quote | render_quote }}
     <div class="source-cite">{{ research.source.doc }}, p.{{ research.source.page }}</div>
   </blockquote>
 
@@ -63,6 +63,9 @@
       </tr>
     </tbody>
   </table>
+  <p class="source-cite">The weighted price target shows "—" because the memo's own
+     table only gives a weighted return here, not a weighted price — this build
+     doesn't back-compute one the source didn't state.</p>
   <p><em>The 25% / 50% / 25% probabilities above are fixed priors transcribed from
      the memo, not learned — this build does not train or serve a model. A
      learned estimator would replace them with probabilities conditioned on

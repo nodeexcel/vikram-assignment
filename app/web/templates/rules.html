@@ -16,7 +16,7 @@
     <p>action: <code>{{ rule.action }}</code>{% if rule.event_date %} · date: {{ rule.event_date }}{% endif %}
        {% if rule.requires_existing_position %} · existing holders only{% endif %}</p>
     {% if rule.source %}
-    <blockquote>{{ rule.source.quote }}
+    <blockquote>{{ rule.source.quote | render_quote }}
       <div class="source-cite">{{ rule.source.doc }}, p.{{ rule.source.page }}</div>
     </blockquote>
     {% endif %}
@@ -46,7 +46,7 @@
   {% for claim in claims %}
     {% if claim.rules | length > 1 %}
     <div style="margin-bottom: 1rem;">
-      <blockquote>{{ claim.source.quote }}
+      <blockquote>{{ claim.source.quote | render_quote }}
         <div class="source-cite">{{ claim.source.doc }}, p.{{ claim.source.page }}</div>
       </blockquote>
       <p>Produced:
@@ -69,14 +69,14 @@
       <tr>
         <td>NVDA</td>
         <td>{{ custom_silicon.nvda.local_name }}</td>
-        <td><blockquote>{{ custom_silicon.nvda.quote }}
+        <td><blockquote>{{ custom_silicon.nvda.quote | render_quote }}
           <div class="source-cite">{{ custom_silicon.nvda.doc }}, p.{{ custom_silicon.nvda.page }}</div>
         </blockquote></td>
       </tr>
       <tr>
         <td>AMZN</td>
         <td>{{ custom_silicon.amzn.local_name }}</td>
-        <td><blockquote>{{ custom_silicon.amzn.quote }}
+        <td><blockquote>{{ custom_silicon.amzn.quote | render_quote }}
           <div class="source-cite">{{ custom_silicon.amzn.doc }}, p.{{ custom_silicon.amzn.page }}</div>
         </blockquote></td>
       </tr>
@@ -102,7 +102,7 @@
       <tr>
         <td>{{ f.label }}</td>
         <td>
-          {% if f.ring == 'unknown' %}<span class="badge badge-unknown">unknown</span>{% else %}{{ f.ring }}{% endif %}
+          <span class="badge badge-{{ f.ring }}">{{ f.ring }}</span>
         </td>
         <td>{{ f.exposures.NVDA.weight if f.exposures.NVDA and f.exposures.NVDA.weight else '—' }}</td>
         <td>{{ f.exposures.NVDA.direction if f.exposures.NVDA else '—' }}</td>

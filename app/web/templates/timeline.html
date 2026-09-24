@@ -47,7 +47,7 @@
     {% endif %}
 
     {% if e.source %}
-    <blockquote>{{ e.source.quote }}
+    <blockquote>{{ e.source.quote | render_quote }}
       <div class="source-cite">{{ e.source.doc }}, p.{{ e.source.page }}</div>
     </blockquote>
     {% endif %}

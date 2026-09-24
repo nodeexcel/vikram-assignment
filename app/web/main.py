@@ -1,9 +1,11 @@
+import re
 from pathlib import Path
 from typing import Literal
 
 from fastapi import FastAPI, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
+from markupsafe import Markup, escape
 
 from app.engine.factors import respond_to_proposal
 from app.engine.loader import load_shared_factors, load_ticker_fixtures, load_timeline
@@ -12,6 +14,18 @@ from app.engine.timeline import initial_state_event, run
 
 app = FastAPI(title="Lexo Trading Decision System")
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
+
+
+def render_quote(text: str) -> Markup:
+    """BUG-20260924-1900-30: source PDFs sometimes carry literal markdown-style
+    **bold** in extracted text. The underlying fixture data stays verbatim
+    (provenance discipline); this only turns it into real emphasis for display,
+    so a plain quote in a blockquote doesn't render literal asterisks."""
+    bolded = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", str(escape(text)))
+    return Markup(bolded)
+
+
+templates.env.filters["render_quote"] = render_quote
 
 SCENARIOS = ["guide_holds", "capex_turns"]
 WHERE_THIS_GOES_NEXT_PATH = Path(__file__).parent.parent.parent / "WHERE_THIS_GOES_NEXT.md"
