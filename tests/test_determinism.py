@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).parent.parent
 #   uv run python -m app.engine.scenario_hash <scenario>
 EXPECTED_HASHES = {
     "guide_holds": "d0c9116cd02ce1d022e5b159cd1024945ea94858469833d46f701b0385e0947a",
-    "capex_turns": "8d36a79b35d927688bc0c995c0255f1c3235df3ecf42e07dea0add23e07dc94f",
+    "capex_turns": "a542de29040475e6c02d1bacbaa04d99e0299c3150cd674112ad7a37d6270f29",
 }
 
 

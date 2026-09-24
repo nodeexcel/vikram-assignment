@@ -18,10 +18,18 @@ rules:
         - deliberately overridden.
     provenance_status: derived
 
+  # BUG-20260924-1537-27: the memo's 2026-11-17 partition is trichotomous with a
+  # residual, not three independent numeric ranges — bull is "near 70% WITH
+  # backlog detail", bear is "below 45%", and base is everything else ("neither
+  # confirms nor breaks"). Grouped and tried in this priority order so base can
+  # be a true else-branch: commentary >=70 WITHOUT backlog detail correctly
+  # falls through bull (backlog required) and bear (not below 45) to base,
+  # instead of firing nothing.
   - id: reentry-buy-full-weight
     name: "Re-entry: FY2028 commentary near 70% with backlog detail"
     ticker: NVDA
     event_date: 2026-11-17
+    group: fy2028-commentary-2026-11-17
     trigger:
       metric: fy2028_commentary_pct
       comparator: gte
@@ -43,6 +51,7 @@ rules:
     name: "Bear row: FY2028 commentary softens below 45%"
     ticker: NVDA
     event_date: 2026-11-17
+    group: fy2028-commentary-2026-11-17
     trigger:
       metric: fy2028_commentary_pct
       comparator: lt
@@ -61,17 +70,15 @@ rules:
         $200.09.
     provenance_status: derived
 
-  # BUG-20260924-1421-20: explicit upper bound (45 <= commentary < 70) so this
-  # rule cannot fire alongside reentry-buy-full-weight on the same date.
   - id: base-row-neither-confirms-nor-breaks
     name: "Base row: FY2028 commentary neither confirms nor breaks the guide"
     ticker: NVDA
     event_date: 2026-11-17
+    group: fy2028-commentary-2026-11-17
     trigger:
       metric: fy2028_commentary_pct
       comparator: gte
       threshold: 45
-      upper_threshold: 70
     action: move_to_base_row_drift_200_09
     source:
       doc: NVDA-memo

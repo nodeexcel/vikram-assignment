@@ -33,11 +33,11 @@ def test_buy_does_not_fire_at_69_9(nvda_rules):
 
 
 def test_buy_requires_backlog_detail(nvda_rules):
-    # The memo's three rows don't define a ">=70% without backlog detail" case —
-    # not firing anything here is correct, not a gap: -09's timelines only author
-    # the three paths the source actually describes.
+    # BUG-20260924-1537-27: >=70% WITHOUT backlog detail is the memo's residual
+    # case ("neither confirms nor breaks") and must fall through to base-row —
+    # a first draft of this test wrongly asserted that nothing should fire here.
     log = run(nvda_rules, [_guidance_event(72, backlog_detail=False)])
-    assert "reentry-buy-full-weight" not in [e.rule_id for e in log.entries]
+    assert [e.rule_id for e in log.entries] == ["base-row-neither-confirms-nor-breaks"]
 
 
 def test_bear_row_fires_below_45_not_at_45(nvda_rules):
@@ -53,6 +53,31 @@ def test_base_row_covers_the_45_to_70_gap_without_overlapping_buy(nvda_rules):
     log = run(nvda_rules, [_guidance_event(72, backlog_detail=True)])
     fired = [e.rule_id for e in log.entries]
     assert fired == ["reentry-buy-full-weight"]
+
+
+@pytest.mark.parametrize(
+    "pct,backlog,expected",
+    [
+        (70, True, "reentry-buy-full-weight"),
+        (70, False, "base-row-neither-confirms-nor-breaks"),
+        (72, True, "reentry-buy-full-weight"),
+        (72, False, "base-row-neither-confirms-nor-breaks"),
+        (80, True, "reentry-buy-full-weight"),
+        (80, False, "base-row-neither-confirms-nor-breaks"),
+    ],
+)
+def test_base_row_is_a_true_else_branch_at_70_72_80(nvda_rules, pct, backlog, expected):
+    # BUG-20260924-1537-27: every commentary level at or above 70 must land
+    # somewhere — buy with backlog detail, base without it. Never nothing.
+    log = run(nvda_rules, [_guidance_event(pct, backlog_detail=backlog)])
+    assert [e.rule_id for e in log.entries] == [expected]
+
+
+def test_2026_11_17_group_always_produces_exactly_one_decision(nvda_rules):
+    for pct in (0, 20, 44.9, 45, 60, 69.9, 70, 85, 100):
+        for backlog in (True, False):
+            log = run(nvda_rules, [_guidance_event(pct, backlog_detail=backlog)])
+            assert len(log.entries) == 1, f"pct={pct} backlog={backlog} produced {log.entries}"
 
     log = run(nvda_rules, [_guidance_event(50)])
     assert [e.rule_id for e in log.entries] == ["base-row-neither-confirms-nor-breaks"]

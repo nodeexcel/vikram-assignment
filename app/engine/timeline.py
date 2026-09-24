@@ -57,6 +57,10 @@ def run(
     log = DecisionLog()
     tracker = ConsecutivePeriodTracker()
     fired_rule_ids: set[str] = set()
+    # Run-scoped, not per-event: a trichotomous decision (e.g. what the
+    # 2026-11-17 commentary said) resolves once for the whole run, not once per
+    # event that happens to carry the same metric.
+    resolved_groups: set[str] = set()
     position = "none"
 
     for event in sort_events(events):
@@ -67,6 +71,8 @@ def run(
 
         for rule in rules:
             if rule.id in fired_rule_ids:
+                continue
+            if rule.group and rule.group in resolved_groups:
                 continue
             if rule.requires_existing_position and position == "none":
                 continue
@@ -84,6 +90,8 @@ def run(
 
             if fired:
                 fired_rule_ids.add(rule.id)
+                if rule.group:
+                    resolved_groups.add(rule.group)
                 override = override_by_rule_id.get(rule.id)
                 if override is not None:
                     # Overridden: the action never applies, so position does not

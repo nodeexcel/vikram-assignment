@@ -79,6 +79,13 @@ class Rule(Sourced):
     # evaluate. The only real precondition in this source is "existing holders
     # only" (the $195 stop), so this is the one structured flag needed for it.
     requires_existing_position: bool = False
+    # BUG-20260924-1537-27: the memo's 2026-11-17 partition is trichotomous with
+    # a residual (bull / bear / "neither confirms nor breaks"), not three
+    # independent numeric ranges. Rules sharing a group are tried in list order
+    # for a given event; once one fires, the rest of the group are skipped for
+    # that event — so the last member can be a true else-branch instead of a
+    # second bounded range that silently excludes a case (BUG-27's gap).
+    group: str | None = None
     trigger: Trigger
     action: str
     event_date: date | None = None

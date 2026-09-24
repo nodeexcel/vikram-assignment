@@ -18,6 +18,14 @@ def test_sector_market_factor_shift_produces_one_proposal_per_exposure():
     assert tickers == {"NVDA", "AMZN"}
 
 
+def test_proposal_order_is_sorted_by_ticker_not_yaml_insertion_order():
+    # ISS-20260924-1537-28: deterministic by construction, not by accident of
+    # dict/YAML key order.
+    factors = load_shared_factors()
+    proposals = factor_shift_proposals(factors, _factor_shift("hyperscaler_capex_financing_shift"))
+    assert [p.ticker for p in proposals] == sorted(p.ticker for p in proposals)
+
+
 def test_fan_out_sign_is_opposite_for_capex_financing_shift():
     factors = load_shared_factors()
     proposals = factor_shift_proposals(factors, _factor_shift("hyperscaler_capex_financing_shift"))

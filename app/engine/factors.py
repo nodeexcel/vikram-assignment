@@ -18,7 +18,11 @@ def factor_shift_proposals(factors: list[Factor], event: Event) -> list[Decision
         return []
 
     proposals = []
-    for ticker, exposure in factor.exposures.items():
+    # ISS-20260924-1537-28: dict iteration order happens to follow YAML key
+    # order today, which isn't a real ordering guarantee — sort explicitly so
+    # proposal order in the log is deterministic by construction (spec §6.2),
+    # not by implementation accident.
+    for ticker, exposure in sorted(factor.exposures.items()):
         proposals.append(
             DecisionEntry(
                 date=event.date,
