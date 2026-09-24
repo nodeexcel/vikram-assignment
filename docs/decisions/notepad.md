@@ -735,3 +735,39 @@ The implementor stopped and logged before continuing, per CLAUDE.md Module 7, ra
 than fixing in passing. That is the behaviour that caught this — the error would have
 been invisible in a working demo, because a hand-wired fan-out would have looked
 identical on screen to a ring-derived one.
+
+### Turn 6 addendum — factor schema shape confirmed against a proposed alternative
+
+Implementor proposed a cheaper fix: keep the single-ticker/single-direction `Factor`
+from FEAT-20260924-1250-03 and add an optional `fan_out_key` string so the engine can
+group the same mechanism across tickers.
+
+**Rejected, on a concrete failure mode in this dataset rather than on principle.**
+Under a join key, `ring` stays a per-row property. NVDA carries the capex force at two
+rings deliberately — #16 Sector, #22 Market. Nothing would prevent #16 and #24 being
+keyed together, silently producing a Sector↔Market pairing the engine would propagate.
+Each row would be individually correct and the pairing incoherent, and unlike
+BUG-20260924-1322-15 it would not be catchable by reading either memo. Under
+`exposures`, ring belongs to the factor and cannot disagree with itself.
+
+Secondary reasons: a mistyped join key fails silently — no error, no propagation, a
+demo that quietly does not fan out — whereas a missing `exposures` entry is visible in
+the fixture; and `exposures` matches the question the engine actually asks, one lookup
+rather than scan-group-reconcile.
+
+Neither design is more honest about provenance: the shared `id` is our assertion
+exactly as `fan_out_key` would be. `exposures` only makes each assertion structurally
+visible as a multi-exposure factor.
+
+Cost accepted: one model, the loader, and the few factor rows transcribed so far.
+FEAT-20260924-1250-04 is mid-flight and -05 has not started, so the rework lands
+before FEAT-20260924-1250-08, where the wrong shape would have been expensive. The
+join key would have been the right call for a single-ticker build; fan-out is the
+headline demo here.
+
+**D16 — validation rules added to spec §6.5.** Ring is single-valued per factor;
+every exposure carries its own source; a sector/market factor with one exposure is
+legal but counted and reported in the coverage line, so an intended-but-untranscribed
+pairing is visible rather than silently inert; an internal factor with more than one
+exposure is a startup error, because internal factors do not propagate and a
+multi-ticker internal factor is a category mistake.

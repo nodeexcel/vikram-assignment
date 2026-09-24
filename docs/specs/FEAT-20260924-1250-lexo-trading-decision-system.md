@@ -319,6 +319,30 @@ See §3 for the one known case and how it is surfaced instead.
 Output is a **proposal**: `{factor, affected_tickers, direction_per_ticker, reasoning,
 source_per_ticker}`.
 
+**Why `exposures` rather than a shared join key on per-ticker factor rows.** Ring must
+be single-valued per factor, and this dataset punishes any design where it is not:
+NVDA carries the capex force deliberately at two rings, #16 on Sector and #22 on
+Market. Under a join-key design nothing prevents #16 and #24 being keyed together,
+silently producing a Sector↔Market pairing that the engine would propagate — each row
+individually correct, the pairing incoherent, and invisible when reading either memo.
+Under `exposures` the ring belongs to the factor and cannot disagree with itself. A
+mistyped join key also fails silently, where a missing `exposures` entry does not.
+
+**Validation (extends §5.4, all startup errors):**
+
+- A factor's `ring` is single-valued by construction. Reject any fixture attempting a
+  per-exposure ring.
+- Every exposure carries its own `source`. A factor with an exposure lacking
+  provenance does not load.
+- A `sector` or `market` factor with exactly one exposure is **legal, not an error** —
+  it simply has nothing to fan out to, as with NVDA #13 Custom ASIC Substitution.
+  Count these and report them in the interface's coverage line, so a pairing that was
+  intended but never transcribed is visible rather than silently inert.
+- An `internal` factor with more than one exposure **is** an error: internal factors
+  do not propagate, so a multi-ticker internal factor is a category mistake. The
+  custom-silicon case is recorded as a displayed observation (§3,
+  FEAT-20260924-1322-16), not as a factor with two exposures.
+
 **A proposal never mutates a position.** It waits for accept or reject. Both outcomes
 append to the decision log with the actor recorded. This constraint comes from the
 ADR and may not be relaxed.
