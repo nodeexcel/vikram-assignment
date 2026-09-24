@@ -16,7 +16,7 @@ Discussion history and rationale: `docs/decisions/notepad.md`
 
 - [o] FEAT-20260924-1250-01 — Scaffold the project (uv, FastAPI, pytest) and deploy an empty page to Render before any engine code, so the public URL exists from the start and Friday's deploy is a redeploy rather than a first attempt
 - [x] ISS-20260924-1250-02 — Extract the NVDA and AMZN PDF text into `sources/text/` via a committed script, gitignored output, so the transcription reference survives session restarts (it was lost once already) [2026-09-24 13:06]
-- [ ] FEAT-20260924-1250-03 — Define the fixture schema in Pydantic with fail-fast validation: every claim carries doc, page and verbatim quote, and the app refuses to start if any rule or factor lacks a source
+- [x] FEAT-20260924-1250-03 — Define the fixture schema in Pydantic with fail-fast validation: every claim carries doc, page and verbatim quote, and the app refuses to start if any rule or factor lacks a source [2026-09-24 13:12]
 - [ ] FEAT-20260924-1250-04 — Transcribe the NVDA fixtures by hand: verdict and stance, execution plan, the three dates, both scenario tables, the decision-driving weighted factors, and the four kill switches — each with page and quote
 - [ ] FEAT-20260924-1250-05 — Transcribe the thin AMZN fixtures: the three-to-four factors that mirror NVDA's, enough to drive the cross-ticker fan-out demo (depends on FEAT-20260924-1250-03)
 - [ ] FEAT-20260924-1250-06 — Build the Tier 1 deterministic rule engine: walks a dated event timeline, fires rules, appends to an immutable decision log, and implements the two-consecutive-period confirmation primitive shared by the $195 stop and two kill switches

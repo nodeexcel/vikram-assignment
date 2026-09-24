@@ -24,6 +24,8 @@ pydantic==2.13.5
     #   fastapi
 pydantic-core==2.46.5
     # via pydantic
+pyyaml==6.0.3
+    # via lexo-trading-decision-system (pyproject.toml)
 starlette==1.7.0
     # via
     #   lexo-trading-decision-system (pyproject.toml)
