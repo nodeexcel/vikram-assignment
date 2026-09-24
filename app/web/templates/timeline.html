@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Timeline — Lexo{% endblock %}
+{% block content %}
+  <h1>Timeline</h1>
+  <p>
+    Scenario:
+    {% for s in scenarios %}
+      {% if s == scenario %}<strong>{{ s }}</strong>{% else %}<a href="/timeline/{{ s }}">{{ s }}</a>{% endif %}
+      {% if not loop.last %}&middot;{% endif %}
+    {% endfor %}
+  </p>
+
+  {% if not entries %}
+  <p>Nothing fired in this scenario.</p>
+  {% endif %}
+
+  {% for e in entries %}
+  <div id="entry-{{ e.id }}" style="margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid #eee;">
+    <p><strong>{{ e.date }}</strong>
+      {% if e.ticker %}&middot; {{ e.ticker }}{% endif %}
+      &middot; <span class="badge {{ 'badge-derived' if e.kind in ('rule_fired',) else ('badge-partial' if e.kind == 'override' else 'badge-unknown') }}">{{ e.kind }}</span>
+    </p>
+
+    {% if e.kind == 'rule_fired' %}
+      <p>{{ e.reason }} &rarr; <code>{{ e.action }}</code></p>
+    {% elif e.kind == 'override' %}
+      <p>The platform's own rule fired here. It would have done: <em>{{ e.would_have_done }}</em>.
+         Instead: <strong>{{ e.action }}</strong>, because {{ e.reason }}</p>
+    {% elif e.kind == 'proposal' %}
+      <p>Tier 2 proposal: re-rate <strong>{{ e.ticker }}</strong> <strong>{{ e.action }}</strong> on
+         <code>{{ e.factor_id }}</code>. {{ e.reason }}</p>
+      {% set response = responses_by_proposal.get(e.id) %}
+      {% if response %}
+        <p>&rarr; <strong>{{ response.action }}ed</strong> by {{ response.actor }}.</p>
+      {% else %}
+        <form method="post" action="/timeline/{{ scenario }}/proposal/{{ e.id }}/accept" style="display:inline;">
+          <button type="submit">Accept</button>
+        </form>
+        <form method="post" action="/timeline/{{ scenario }}/proposal/{{ e.id }}/reject" style="display:inline;">
+          <button type="submit">Reject</button>
+        </form>
+      {% endif %}
+    {% elif e.kind == 'proposal_response' %}
+      <p>Human response to <a href="#entry-{{ e.responds_to }}">proposal #{{ e.responds_to }}</a>:
+         <strong>{{ e.action }}ed</strong> by {{ e.actor }}. Position unchanged — a proposal never
+         mutates a position on its own.</p>
+    {% endif %}
+
+    {% if e.source %}
+    <blockquote>{{ e.source.quote }}
+      <div class="source-cite">{{ e.source.doc }}, p.{{ e.source.page }}</div>
+    </blockquote>
+    {% endif %}
+  </div>
+  {% endfor %}
+{% endblock %}
