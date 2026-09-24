@@ -124,6 +124,35 @@ rules:
         the rating moves to Sell.
     provenance_status: derived
 
+  # ISS-20260924-1700-25: the spec's one concrete provenance_status=partial
+  # example — the memo states the rule but admits it could not source the
+  # parameters that would make it fully actionable.
+  - id: hedge-existing-exposure-through-two-windows
+    name: >-
+      Hedge existing exposure through the 2026-11-17 print and the late-
+      February 2027 window (partial — no options chain sourced)
+    ticker: NVDA
+    requires_existing_position: true
+    trigger:
+      metric: iv_rank
+      comparator: lte
+      threshold: 9
+    action: hedge_existing_exposure
+    source:
+      doc: NVDA-memo
+      page: 47
+      quote: >-
+        Protection across the same window is cheap - 30-day implied
+        volatility sits at an IV rank of 0-9 out of 100, the low end of
+        the past year. That is a reason to hedge existing exposure
+        through the 2026-11-17 print and the late-February 2027 window,
+        and it is not a reason to create new exposure.
+    provenance_status: partial
+    gap_note: >-
+      No strike, expiry or premium is named anywhere here: no options
+      chain was sourced for this workbook, so the instruction is the
+      window and the volatility condition and nothing finer.
+
   - id: stop-195-two-consecutive-weekly-closes
     name: "Stop: $195.00 on two consecutive weekly closes"
     ticker: NVDA
