@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Determinism check — Lexo Trading Decision System</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 60rem; margin: 2rem auto; padding: 0 1rem; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { text-align: left; padding: 0.5rem; border-bottom: 1px solid #ccc; vertical-align: top; }
+    code { font-size: 0.85em; word-break: break-all; }
+    .match { color: #0a7d2c; font-weight: bold; }
+    .mismatch { color: #b00020; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Determinism check</h1>
+  <p>Each scenario's Tier 1 decision log is run twice, independently, and canonically
+     hashed (sorted keys, in-world dates only, no execution timestamps — spec §7).
+     Same inputs must produce the same hash every time.</p>
+  <table>
+    <thead>
+      <tr><th>Scenario</th><th>Run A</th><th>Run B</th><th>Result</th></tr>
+    </thead>
+    <tbody>
+      {% for c in checks %}
+      <tr>
+        <td>{{ c.scenario }}</td>
+        <td><code>{{ c.hash_a }}</code></td>
+        <td><code>{{ c.hash_b }}</code></td>
+        <td>
+          {% if c.match %}
+            <span class="match">MATCH</span>
+          {% else %}
+            <span class="mismatch">MISMATCH</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
