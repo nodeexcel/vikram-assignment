@@ -185,7 +185,11 @@ class Event(BaseModel):
     'claim' in the provenance sense — no fail-fast source requirement here."""
 
     date: date
-    kind: Literal["disclosure", "guidance", "third_party_guidance", "price_close", "factor_shift"]
+    # state_snapshot carries standing research facts (e.g. spring_state) that a
+    # continuous, non-dated rule (the platform default) evaluates against — not a
+    # dated disclosure itself, but needed so that rule fires through the same
+    # event-loop machinery as everything else rather than a special case.
+    kind: Literal["disclosure", "guidance", "third_party_guidance", "price_close", "factor_shift", "state_snapshot"]
     ticker: Ticker | None = None
     payload: dict = Field(default_factory=dict)
     source: Source | None = None

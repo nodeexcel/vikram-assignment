@@ -1,5 +1,5 @@
 from app.engine.log import DecisionEntry, DecisionLog
-from app.engine.models import Event, Rule
+from app.engine.models import Event, Override, Research, Rule
 from app.engine.rules import ConsecutivePeriodTracker, event_in_rule_window, single_event_satisfies
 
 # Actions that change position state, read off the rule's own `action` string.
@@ -21,14 +21,31 @@ def sort_events(events: list[Event]) -> list[Event]:
     return sorted(events, key=lambda e: (e.date, e.kind, e.ticker or ""))
 
 
-def run(rules: list[Rule], events: list[Event]) -> DecisionLog:
+def initial_state_event(research: Research) -> Event:
+    """Standing research facts (spring_state) as a state_snapshot event at the
+    research as-of date, so a continuous state-only rule (the platform default)
+    fires through the same event-loop machinery as everything else (spec §6.4)."""
+    return Event(
+        date=research.as_of,
+        kind="state_snapshot",
+        ticker=research.ticker,
+        payload={"spring_state": research.spring_state} if research.spring_state else {},
+    )
+
+
+def run(rules: list[Rule], events: list[Event], overrides: list[Override] = ()) -> DecisionLog:
     """Tier 1 run loop (spec §6.2). Pure function: same rules + events always
     produce the same log. No wall-clock reads, no RNG, no dict/set-iteration
     dependence — sort_events() fixes the only order-sensitive step.
 
     Position starts at "none" (the memo's own starting state) and updates from
     each fired rule's action, so requires_existing_position (the $195 stop is for
-    existing holders only) is a real gate, not a label."""
+    existing holders only) is a real gate, not a label.
+
+    A rule with a matching override (spec §6.4) never applies its action — the
+    log records the override instead of a plain rule_fired, with what the rule
+    would have done, what actually happened, and why."""
+    override_by_rule_id = {o.rule_id: o for o in overrides}
     log = DecisionLog()
     tracker = ConsecutivePeriodTracker()
     fired_rule_ids: set[str] = set()
@@ -54,19 +71,37 @@ def run(rules: list[Rule], events: list[Event]) -> DecisionLog:
 
             if fired:
                 fired_rule_ids.add(rule.id)
-                if rule.action in _POSITION_AFTER_ACTION:
-                    position = _POSITION_AFTER_ACTION[rule.action]
-                log.append(
-                    DecisionEntry(
-                        date=event.date,
-                        event_kind=event.kind,
-                        ticker=event.ticker,
-                        kind="rule_fired",
-                        rule_id=rule.id,
-                        action=rule.action,
-                        reason=rule.name,
-                        source=rule.source,
+                override = override_by_rule_id.get(rule.id)
+                if override is not None:
+                    # Overridden: the action never applies, so position does not
+                    # change — that is the entire point of the override.
+                    log.append(
+                        DecisionEntry(
+                            date=event.date,
+                            event_kind=event.kind,
+                            ticker=event.ticker,
+                            kind="override",
+                            rule_id=rule.id,
+                            action=override.actual,
+                            reason=override.reason,
+                            source=override.source,
+                            would_have_done=override.would_have_done,
+                        )
                     )
-                )
+                else:
+                    if rule.action in _POSITION_AFTER_ACTION:
+                        position = _POSITION_AFTER_ACTION[rule.action]
+                    log.append(
+                        DecisionEntry(
+                            date=event.date,
+                            event_kind=event.kind,
+                            ticker=event.ticker,
+                            kind="rule_fired",
+                            rule_id=rule.id,
+                            action=rule.action,
+                            reason=rule.name,
+                            source=rule.source,
+                        )
+                    )
 
     return log

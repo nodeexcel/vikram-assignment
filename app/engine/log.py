@@ -20,6 +20,9 @@ class DecisionEntry(BaseModel):
     action: str | None
     reason: str
     source: Source | None
+    # Only meaningful on kind="override": what the rule would have done, versus
+    # what actually happened once the override suppressed it.
+    would_have_done: str | None = None
 
 
 class DecisionLog(BaseModel):
