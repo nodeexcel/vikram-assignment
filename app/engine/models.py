@@ -180,6 +180,17 @@ class Research(Sourced):
     spring_state: str | None = None
 
 
+class Event(BaseModel):
+    """A dated input to the engine run (spec §6.1). Scenario-timeline data, not a
+    'claim' in the provenance sense — no fail-fast source requirement here."""
+
+    date: date
+    kind: Literal["disclosure", "guidance", "third_party_guidance", "price_close", "factor_shift"]
+    ticker: Ticker | None = None
+    payload: dict = Field(default_factory=dict)
+    source: Source | None = None
+
+
 class FixtureBundle(BaseModel):
     ticker: Ticker
     research: Research
