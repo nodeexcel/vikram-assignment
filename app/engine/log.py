@@ -23,6 +23,12 @@ class DecisionEntry(BaseModel):
     action: str | None
     reason: str
     source: Source | None
+    # Position held after this entry: "none" | "starter" | "full". The brief asks
+    # the system to decide "whether to hold a position, how large, and when to
+    # stop" — size is a first-class output, so it is recorded per entry rather
+    # than left for a reader to infer from the action. On an override this shows
+    # the position the override preserved, which is the point of the override.
+    position_after: str | None = None
     # Only meaningful on kind="override": what the rule would have done, versus
     # what actually happened once the override suppressed it.
     would_have_done: str | None = None

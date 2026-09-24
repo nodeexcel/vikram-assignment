@@ -1,8 +1,17 @@
 name: "Guide Holds"
 description: >-
   FY2028 commentary confirms the guide with backlog detail at the 2026-11-17
-  print. Driven entirely by an issuer disclosure, not a price. Re-entry trigger
-  fires: Buy at full weight.
+  print, so the re-entry trigger fires and the position goes to full weight.
+  Driven entirely by an issuer disclosure, not a price. What follows shows the
+  other half of the brief's ask — "how large, and when to stop". Now that a
+  position exists, the $195.00 stop is live where it was dormant before. The
+  weekly closes below are a simulated future, not a sourced claim: the rule
+  (the level, the two-consecutive-weekly-close confirmation, holders only) is
+  derived from the memo; the path that tests it is the simulation. It is shaped
+  deliberately so one close lands under $195.00 and does NOT stop the position
+  out, because the following week closes back above and breaks the streak —
+  which is the memo's own stated reason for requiring two closes: "so a single
+  volatile week around an earnings print does not trigger the exit."
 events:
   - date: 2026-11-17
     kind: guidance
@@ -17,3 +26,47 @@ events:
         2026-11-17 (company-confirmed). FY2028 commentary holding near 70%
         with backlog detail means this workbook's central assumption is the
         thing that was wrong.
+
+  # Weekly closes from here on. Simulated, not sourced — see the description.
+  - date: 2026-11-20
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 234.10
+
+  - date: 2026-12-18
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 214.75
+
+  # One close below $195.00. The stop does NOT fire on this — it needs two in a
+  # row, and the next week closes back above the level.
+  - date: 2027-01-15
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 193.50
+
+  # Back above $195.00: the streak breaks. This single week is exactly the case
+  # the two-close confirmation exists to survive.
+  - date: 2027-01-22
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 198.20
+
+  # Two consecutive weekly closes below $195.00 start here.
+  - date: 2027-01-29
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 192.10
+
+  # Second consecutive close below the level — the stop fires and the position
+  # goes back to none.
+  - date: 2027-02-05
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 188.40

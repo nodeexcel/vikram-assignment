@@ -48,6 +48,20 @@ def action_prose(action: str) -> str:
 
 templates.env.filters["action_prose"] = action_prose
 
+# Position size in plain language — the brief asks a non-engineer to follow this.
+_POSITION_PROSE = {
+    "none": "no position",
+    "starter": "starter (about one-third weight)",
+    "full": "full weight",
+}
+
+
+def position_prose(position: str) -> str:
+    return _POSITION_PROSE.get(position, position)
+
+
+templates.env.filters["position_prose"] = position_prose
+
 
 def _inline_markdown(text: str) -> str:
     escaped = str(escape(text))

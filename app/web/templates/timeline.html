@@ -19,6 +19,9 @@
     <p><strong>{{ e.date }}</strong>
       {% if e.ticker %}&middot; {{ e.ticker }}{% endif %}
       &middot; <span class="badge {{ 'badge-derived' if e.kind in ('rule_fired',) else ('badge-partial' if e.kind == 'override' else 'badge-unknown') }}">{{ e.kind }}</span>
+      {% if e.position_after %}
+      &middot; position after: <strong>{{ e.position_after | position_prose }}</strong>
+      {% endif %}
     </p>
 
     {% if e.kind == 'rule_fired' %}

@@ -66,6 +66,11 @@ def run(
     for event in sort_events(events):
         if event.kind == "factor_shift":
             for proposal in factor_shift_proposals(list(factors), event):
+                # Position is carried through unchanged on purpose: a Tier 2
+                # proposal never moves a position on its own (ADR constraint), and
+                # showing the same position before and after makes that visible
+                # rather than merely stated.
+                proposal.position_after = position
                 log.append(proposal)
             continue
 
@@ -108,6 +113,7 @@ def run(
                             source=override.source,
                             would_have_done=override.would_have_done,
                             actor=override.actor,
+                            position_after=position,
                         )
                     )
                 else:
@@ -123,6 +129,7 @@ def run(
                             action=rule.action,
                             reason=rule.name,
                             source=rule.source,
+                            position_after=position,
                         )
                     )
 

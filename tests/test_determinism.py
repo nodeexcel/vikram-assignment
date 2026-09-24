@@ -16,8 +16,8 @@ REPO_ROOT = Path(__file__).parent.parent
 # (spec §7). Regenerate deliberately with:
 #   uv run python -m app.engine.scenario_hash <scenario>
 EXPECTED_HASHES = {
-    "guide_holds": "d0c9116cd02ce1d022e5b159cd1024945ea94858469833d46f701b0385e0947a",
-    "capex_turns": "a542de29040475e6c02d1bacbaa04d99e0299c3150cd674112ad7a37d6270f29",
+    "guide_holds": "a07a2384eb359f70663ccbb1394ab96449de40b0a2b8808da09b950bdadc40c4",
+    "capex_turns": "ee1cb6be2b7c9e04472660f65280abebf88d9b3eb5d979e9253c25ba948c20a1",
 }
 
 

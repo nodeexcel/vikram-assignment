@@ -3,5 +3,12 @@ services:
     type: web
     runtime: python
     plan: free
+    # PYTHON_VERSION takes precedence over the .python-version file, and is set
+    # explicitly here so the deploy does not depend on Render picking up a
+    # dotfile. The code uses StrEnum (3.11+) and would fail at import on an
+    # older default.
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.11
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.web.main:app --host 0.0.0.0 --port $PORT
