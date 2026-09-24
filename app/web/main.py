@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from markupsafe import Markup, escape
@@ -26,6 +26,122 @@ def render_quote(text: str) -> Markup:
 
 
 templates.env.filters["render_quote"] = render_quote
+
+# ISS-20260924-1732-39: raw action identifiers (move_to_base_row_drift_200_09)
+# are what overflowed the dated-triggers table at 390px. Prose is the root-cause
+# fix — shorter and more readable at any width, not just scrolled on mobile.
+_ACTION_PROSE = {
+    "open_starter_position": "Open a starter position",
+    "buy_full_weight": "Buy at full weight",
+    "move_to_bear_row": "Move to the bear row",
+    "move_to_base_row_drift_200_09": "Move to the base row, drift toward $200.09",
+    "exit_short": "Exit / go short",
+    "sell": "Sell",
+    "hedge_existing_exposure": "Hedge existing exposure",
+    "stop_exit": "Stop out",
+}
+
+
+def action_prose(action: str) -> str:
+    return _ACTION_PROSE.get(action, action)
+
+
+templates.env.filters["action_prose"] = action_prose
+
+
+def _inline_markdown(text: str) -> str:
+    escaped = str(escape(text))
+    escaped = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
+    # Single-asterisk italics, after bold so **x** doesn't leave stray *'s behind.
+    escaped = re.sub(r"\*(.+?)\*", r"<em>\1</em>", escaped)
+    escaped = re.sub(r"`([^`]+?)`", r"<code>\1</code>", escaped)
+    return escaped
+
+
+def render_markdown(text: str) -> Markup:
+    """BUG-20260924-1732-36: the write-up (FEAT-14) was rendered as a single
+    <pre> block, so its headings/lists/bold/rules showed as literal '#', '-',
+    '**', '---' — on the one page carrying the thinking the client said is
+    graded as heavily as the code. A small line-oriented parser, not a new
+    dependency: headings (#/##/###), bullet and numbered lists (with wrapped
+    continuation lines), horizontal rules, bold and inline code, paragraphs.
+    Handles exactly the subset WHERE_THIS_GOES_NEXT.md actually uses — this is
+    not a general markdown engine."""
+    lines = text.split("\n")
+    html: list[str] = []
+    para_buf: list[str] = []
+    list_type: str | None = None
+
+    def flush_para() -> None:
+        if para_buf:
+            html.append("<p>" + _inline_markdown(" ".join(para_buf)) + "</p>")
+            para_buf.clear()
+
+    def close_list() -> None:
+        nonlocal list_type
+        if list_type:
+            html.append(f"</{list_type}>")
+            list_type = None
+
+    marker_re = re.compile(r"^-\s+(.*)$")
+    numbered_re = re.compile(r"^\d+\.\s+(.*)$")
+    heading_re = re.compile(r"^(#{1,3})\s+(.*)$")
+    is_break = lambda s: s == "" or s == "---" or marker_re.match(s) or numbered_re.match(s) or heading_re.match(s)
+
+    i = 0
+    while i < len(lines):
+        stripped = lines[i].strip()
+
+        if stripped == "":
+            flush_para()
+            close_list()
+            i += 1
+            continue
+
+        if stripped == "---":
+            flush_para()
+            close_list()
+            html.append("<hr>")
+            i += 1
+            continue
+
+        heading = heading_re.match(stripped)
+        if heading:
+            flush_para()
+            close_list()
+            level = len(heading.group(1))
+            html.append(f"<h{level}>{_inline_markdown(heading.group(2))}</h{level}>")
+            i += 1
+            continue
+
+        bullet = marker_re.match(stripped)
+        numbered = numbered_re.match(stripped)
+        if bullet or numbered:
+            flush_para()
+            this_type = "ul" if bullet else "ol"
+            if list_type != this_type:
+                close_list()
+                html.append(f"<{this_type}>")
+                list_type = this_type
+            item_lines = [(bullet or numbered).group(1)]
+            j = i + 1
+            while j < len(lines) and not is_break(lines[j].strip()):
+                item_lines.append(lines[j].strip())
+                j += 1
+            html.append("<li>" + _inline_markdown(" ".join(item_lines)) + "</li>")
+            i = j
+            continue
+
+        close_list()
+        para_buf.append(stripped)
+        i += 1
+
+    flush_para()
+    close_list()
+    return Markup("\n".join(html))
+
+
+templates.env.filters["render_markdown"] = render_markdown
 
 SCENARIOS = ["guide_holds", "capex_turns"]
 WHERE_THIS_GOES_NEXT_PATH = Path(__file__).parent.parent.parent / "WHERE_THIS_GOES_NEXT.md"
@@ -170,18 +286,28 @@ def timeline_view(request: Request, scenario: str):
     """View 3 (spec §9): step through a scenario's dated events, see what the
     system did and why in plain language at each point, and accept or reject
     Tier 2 proposals. Every interaction is a form post + full page reload — no
-    client framework (decided in Turn 4, notepad)."""
+    client framework (decided in Turn 4, notepad).
+
+    BUG-20260924-1724-35: an unrecognised scenario used to silently fall back
+    to SCENARIOS[0] while the URL still showed the bogus name — a fallback a
+    reader can't see, which CLAUDE.md Module 4 forbids. 404 instead."""
     if scenario not in SCENARIOS:
-        scenario = SCENARIOS[0]
+        raise HTTPException(status_code=404, detail=f"No such scenario: {scenario!r}")
     log = _run_scenario(scenario)
     responses_by_proposal = {e.responds_to: e for e in log.entries if e.kind == "proposal_response"}
+    # BUG-20260924-1732-37: proposal_response entries are appended to the log
+    # after the run completes (they're recorded later, by a human), so append
+    # order isn't chronological order — a response dated 2027-01-28 could
+    # render after a 2027-02-04 entry. Sort by (date, id) for display only;
+    # the underlying log's append order (and hash) is untouched.
+    entries_in_date_order = sorted(log.entries, key=lambda e: (e.date, e.id))
     return templates.TemplateResponse(
         request,
         "timeline.html",
         {
             "scenario": scenario,
             "scenarios": SCENARIOS,
-            "entries": log.entries,
+            "entries": entries_in_date_order,
             "responses_by_proposal": responses_by_proposal,
         },
     )
@@ -194,7 +320,22 @@ def timeline_respond(scenario: str, proposal_id: int, decision: Literal["accept"
     Form()-based endpoint specifically to avoid adding that dependency for a
     response that carries no free-text field (respond_to_proposal takes only
     decision + actor, and the ADR requires the response be logged with an
-    actor, not a reason)."""
-    if scenario in SCENARIOS:
-        _PROPOSAL_RESPONSES[scenario].append((proposal_id, decision))
+    actor, not a reason).
+
+    BUG-20260924-1724-34: proposal_id used to go unvalidated, so any id that
+    wasn't a real proposal (unknown, or a valid id that belongs to a
+    non-proposal entry) got stored anyway — and every later render of this
+    scenario then 500'd forever, calling next() on an empty generator inside
+    respond_to_proposal. Validate against a freshly computed log before
+    storing anything; reject with 404 rather than accept and break the page.
+
+    BUG-20260924-1724-35: unknown scenario also 404s here now, matching the
+    GET route, instead of silently dropping the response."""
+    if scenario not in SCENARIOS:
+        raise HTTPException(status_code=404, detail=f"No such scenario: {scenario!r}")
+    log = _run_scenario(scenario)
+    valid_proposal_ids = {e.id for e in log.entries if e.kind == "proposal"}
+    if proposal_id not in valid_proposal_ids:
+        raise HTTPException(status_code=404, detail=f"No such proposal: {proposal_id}")
+    _PROPOSAL_RESPONSES[scenario].append((proposal_id, decision))
     return RedirectResponse(url=f"/timeline/{scenario}", status_code=303)

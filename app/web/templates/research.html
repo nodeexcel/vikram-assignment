@@ -2,7 +2,7 @@
 {% block title %}What the research concludes — Lexo{% endblock %}
 {% block content %}
   <h1>What the research concludes</h1>
-  <p>NVDA · reference price ${{ research.reference_price }} · as of {{ research.as_of }}</p>
+  <p>NVDA · reference price ${{ "%.2f"|format(research.reference_price) }} · as of {{ research.as_of }}</p>
 
   <h2>Verdict — 3&ndash;5 year intrinsic</h2>
   <p>{{ research.verdict.text }}</p>
@@ -30,14 +30,14 @@
       <tr>
         <td>{{ leg.label }}</td>
         <td>{{ (leg.probability * 100) | round(0) | int }}%</td>
-        <td>${{ leg.price }}</td>
+        <td>${{ "%.2f"|format(leg.price) }}</td>
         <td>{{ leg.return_pct }}%</td>
       </tr>
       {% endfor %}
       <tr>
         <td><strong>Probability-weighted</strong></td>
         <td>100%</td>
-        <td>${{ intrinsic.weighted_price }}</td>
+        <td>${{ "%.2f"|format(intrinsic.weighted_price) }}</td>
         <td>{{ intrinsic.weighted_return_pct }}%</td>
       </tr>
     </tbody>
@@ -51,7 +51,7 @@
       <tr>
         <td>{{ leg.label }}</td>
         <td>{{ (leg.probability * 100) | round(0) | int }}%</td>
-        <td>${{ leg.price }}</td>
+        <td>${{ "%.2f"|format(leg.price) }}</td>
         <td>{{ leg.return_pct }}%</td>
       </tr>
       {% endfor %}
@@ -74,6 +74,7 @@
      next</a> for what that would take.</em></p>
 
   <h2>The dated triggers that change this rating</h2>
+  <div class="table-wrap">
   <table>
     <thead><tr><th>When</th><th>Rule</th><th>Then</th></tr></thead>
     <tbody>
@@ -81,11 +82,12 @@
       <tr>
         <td>{{ rule.event_date or (rule.trigger.window_start ~ ' to ' ~ rule.trigger.window_end) }}</td>
         <td>{{ rule.name }}</td>
-        <td>{{ rule.action }}</td>
+        <td>{{ rule.action | action_prose }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  </div>
   <p>See <a href="/rules">rules &amp; sources</a> for the verbatim quote behind each one.</p>
 
   <h2>Kill switches</h2>

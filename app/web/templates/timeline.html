@@ -22,7 +22,7 @@
     </p>
 
     {% if e.kind == 'rule_fired' %}
-      <p>{{ e.reason }} &rarr; <code>{{ e.action }}</code></p>
+      <p>{{ e.reason }} &rarr; {{ e.action | action_prose }}</p>
     {% elif e.kind == 'override' %}
       <p>The platform's own rule fired here. It would have done: <em>{{ e.would_have_done }}</em>.
          Instead: <strong>{{ e.action }}</strong>, because {{ e.reason }}</p>

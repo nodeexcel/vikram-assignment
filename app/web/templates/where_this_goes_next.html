@@ -1,5 +1,5 @@
 {% extends "base.html" %}
 {% block title %}Where this goes next — Lexo{% endblock %}
 {% block content %}
-  <pre style="white-space: pre-wrap; font-family: system-ui, sans-serif; line-height: 1.6;">{{ text }}</pre>
+  <div class="prose">{{ text | render_markdown }}</div>
 {% endblock %}
