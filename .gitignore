@@ -1,0 +1,15 @@
+# Working rules — intentionally untracked
+CLAUDE.md
+
+# Extracted source text (regenerate with scripts/extract_sources.sh)
+sources/text/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Env
+.env

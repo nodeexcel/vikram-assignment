@@ -550,3 +550,78 @@ says to flag anything not traceable to source.
 Validate dependency versions, then present the complete task inventory for approval.
 Per CLAUDE.md Module 7 nothing goes into `TODO.md` until the inventory is approved,
 and no implementation code is written until the spec is approved.
+
+---
+
+## Turn 5 — 2026-09-24 — Inventory approved; TODO, ADR and spec written
+
+### Q10 — RESOLVED: dependency versions validated, not recalled
+
+Resolved with `uv pip compile --python-version 3.13` against the local Python
+3.13.11 on 2026-09-24:
+
+```
+fastapi==0.141.1  starlette==1.7.0  uvicorn==0.53.0
+jinja2==3.1.6     pydantic==2.13.5  pytest==9.1.1
+```
+
+All declare `requires_python >= 3.10` or lower; the set co-resolves cleanly. Note
+starlette is at 1.x — a major line, pulled in by FastAPI 0.141.1's own constraint.
+
+### Q11 — RESOLVED: no HTMX, no client framework
+
+Every interaction needed — choose scenario, step the timeline, accept or reject a
+proposal — is a plain form post with a full page reload. A JS library buys nothing
+here and costs a dependency. Upgrade path if a specific interaction later demands
+partial updates: add HTMX from a CDN, one script tag, no build step.
+
+### Task inventory — approved by the user, then logged
+
+14 items written to `TODO.md`, all `[ ]`. Nothing was logged before approval, per
+CLAUDE.md Module 7.
+
+**ID format deviation, surfaced not silent.** Module 7 specifies
+`<PREFIX>-YYYYMMDD-HHMM`. All 14 items were approved in the same minute, so the
+format would produce 14 identical IDs. A two-digit sequence suffix was appended
+(`FEAT-20260924-1250-01` …). The timestamp still serves as the date-added field.
+Noted in `TODO.md` itself.
+
+### Artifacts written this turn
+
+- `TODO.md` — 14 items, flat, all Todo.
+- `docs/adr/ADR-20260924-1250-tiered-decision-engine.md` — the tiered architecture
+  and the constraint that no Tier 2/3 output may move a position without a recorded
+  human decision. Written as an ADR rather than a spec section because it is the
+  cross-cutting pattern the whole application rests on, and the implementor session
+  needs it as a standing constraint.
+- `docs/specs/FEAT-20260924-1250-lexo-trading-decision-system.md` — the
+  implementation spec covering all 14 items: requirement traceability, verified
+  source facts, repo layout, fixture schema with fail-fast validation, engine
+  semantics, the determinism proof, the two futures, interface, tests, deployment,
+  and the cut order under time pressure.
+- `.gitignore` — excludes `CLAUDE.md` (per user instruction, kept untracked),
+  `sources/text/`, and the usual Python artefacts.
+
+### Standing caveats recorded for the implementor
+
+- **Page numbers in the spec's source table are indicative.** They come from the
+  memo's own `N · 92` footers as observed during Turn 3 text extraction. Every page
+  and quote is to be re-verified at transcription time and the spec corrected if
+  wrong.
+- **Fixtures follow the memo, never the call transcript.** The ASR mangled the exit
+  trigger — it is "any **two**" of four hyperscalers, and 45% is a **growth rate**,
+  not $450B.
+- **`app/engine` must not import from `app/web`.** The engine is a library; the web
+  layer is a shell. This is what keeps the determinism proof cheap.
+- Branch and merge operations are human-directed. Commit to `master`; do not create,
+  switch or merge branches.
+
+### State at end of this session
+
+Discussion phase complete. No implementation code written, by design — this session
+was for research and decisions; the build hands over to a fresh session.
+
+Open items requiring a human before implementation starts:
+- **Spec approval.** CLAUDE.md Module 7 requires explicit approval of the spec before
+  any implementation code is written. Not yet given.
+- **Render account** must exist and be connected to the repo for item -01.
