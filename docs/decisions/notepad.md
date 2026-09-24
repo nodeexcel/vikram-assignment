@@ -625,3 +625,15 @@ Open items requiring a human before implementation starts:
 - **Spec approval.** CLAUDE.md Module 7 requires explicit approval of the spec before
   any implementation code is written. Not yet given.
 - **Render account** must exist and be connected to the repo for item -01.
+
+---
+
+## Turn 6 — 2026-09-24 — Spec approved; Render not yet connected
+
+Spec approved as-is by the user. Implementation begins with item -01.
+
+**Render account is not yet connected to this repo.** Item -01 scaffolds the app,
+pins dependencies and prepares everything a Render deploy needs (start command,
+`requirements.txt`), but the actual deploy step is blocked until the user connects a
+Render account. This will be flagged again when that step is reached rather than
+skipped or faked with a placeholder URL.
