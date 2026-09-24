@@ -14,6 +14,7 @@ app = FastAPI(title="Lexo Trading Decision System")
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
 SCENARIOS = ["guide_holds", "capex_turns"]
+WHERE_THIS_GOES_NEXT_PATH = Path(__file__).parent.parent.parent / "WHERE_THIS_GOES_NEXT.md"
 
 # Human responses to Tier 2 proposals, per scenario. In-memory only — this is a
 # single-user local demo (spec §12: no auth/multi-user), and proposal ids are
@@ -139,6 +140,15 @@ def determinism(request: Request):
         hash_b = _run_scenario(scenario).canonical_hash()
         checks.append({"scenario": scenario, "hash_a": hash_a, "hash_b": hash_b, "match": hash_a == hash_b})
     return templates.TemplateResponse(request, "determinism.html", {"checks": checks})
+
+
+@app.get("/where-this-goes-next")
+def where_this_goes_next(request: Request):
+    """FEAT-20260924-1250-14. Rendered as plain preformatted text rather than
+    pulling in a markdown-to-HTML dependency for one page — the content is
+    what's graded, not its typography."""
+    text = WHERE_THIS_GOES_NEXT_PATH.read_text()
+    return templates.TemplateResponse(request, "where_this_goes_next.html", {"text": text})
 
 
 @app.get("/timeline/{scenario}")
