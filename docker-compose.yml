@@ -1,0 +1,25 @@
+# Local use only. Render does NOT read compose files — it builds the Dockerfile
+# directly (render.yaml sets runtime: docker). Compose exists here so the image
+# that ships is the image you can run locally, rather than testing one thing and
+# deploying another.
+#
+#   docker compose up --build     ->  http://localhost:8000
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lexo-trading-decision-system
+    ports:
+      - "8000:8000"
+    environment:
+      # Set explicitly to mirror how Render injects it, so the $PORT path is
+      # exercised locally rather than only in production.
+      PORT: 8000
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8000/health').read()"]
+      interval: 30s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped

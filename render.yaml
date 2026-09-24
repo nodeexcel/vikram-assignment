@@ -1,14 +1,17 @@
+# Render blueprint. Render builds the Dockerfile directly; it does not read
+# docker-compose.yml (compose is local-only — see that file's header).
 services:
   - name: lexo-trading-decision-system
     type: web
-    runtime: python
+    runtime: docker
     plan: free
-    # PYTHON_VERSION takes precedence over the .python-version file, and is set
-    # explicitly here so the deploy does not depend on Render picking up a
-    # dotfile. The code uses StrEnum (3.11+) and would fail at import on an
-    # older default.
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.13.11
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.web.main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # The Dockerfile's CMD binds 0.0.0.0 on $PORT, which Render injects and
+    # defaults to 10000. No dockerCommand override is needed.
+    #
+    # Python version is pinned by the base image, so PYTHON_VERSION is not set
+    # here — under the docker runtime it would have no effect and would only
+    # mislead a reader into thinking it controlled anything.
+    healthCheckPath: /health
+    autoDeployTrigger: commit

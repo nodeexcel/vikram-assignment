@@ -1,4 +1,5 @@
 import re
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal
 
@@ -8,11 +9,44 @@ from fastapi.templating import Jinja2Templates
 from markupsafe import Markup, escape
 
 from app.engine.factors import respond_to_proposal
-from app.engine.loader import load_shared_factors, load_ticker_fixtures, load_timeline
+from app.engine.loader import (
+    load_all_fixtures,
+    load_shared_factors,
+    load_ticker_fixtures,
+    load_timeline,
+)
 from app.engine.log import DecisionLog
 from app.engine.timeline import initial_state_event, run
 
-app = FastAPI(title="Lexo Trading Decision System")
+BOOT_SCENARIOS = ["guide_holds", "capex_turns"]
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """BUG-20260924-1842-45: load and validate every fixture at boot, so an
+    unsourced rule kills the process instead of surfacing as a 500 on whichever
+    page a reader happens to open first.
+
+    Spec 5.4 and CLAUDE.md Module 4 require failing loud and early. The loader
+    already raises; nothing was calling it at startup. This matters most in a
+    container: without it the process starts, a health check on / passes because
+    the index touches no fixtures, the platform marks the deploy live, and every
+    substantive page is broken.
+
+    Nothing is caught here, on purpose. The exception propagates, the server
+    exits non-zero, and the deploy fails - which is the entire point."""
+    bundles, factors = load_all_fixtures(["NVDA"])
+    timelines = {name: load_timeline(name) for name in BOOT_SCENARIOS}
+    app.state.boot = {
+        "tickers": sorted(bundles),
+        "rules": sum(len(b.rules) for b in bundles.values()),
+        "factors": len(factors),
+        "scenarios": {name: len(t.events) for name, t in timelines.items()},
+    }
+    yield
+
+
+app = FastAPI(title="Lexo Trading Decision System", lifespan=lifespan)
 templates = Jinja2Templates(directory=Path(__file__).parent / "templates")
 
 
@@ -319,6 +353,17 @@ def where_this_goes_next(request: Request):
         "prose.html",
         {"text": WHERE_THIS_GOES_NEXT_PATH.read_text(), "page_title": "Where this goes next"},
     )
+
+
+@app.get("/health")
+def health(request: Request):
+    """Reports what actually loaded, not merely that a socket is open. Used as
+    the platform health check path, so a container that somehow came up without
+    fixtures reports unhealthy rather than live."""
+    boot = getattr(request.app.state, "boot", None)
+    if not boot or not boot.get("rules"):
+        raise HTTPException(status_code=503, detail="fixtures not loaded")
+    return {"status": "ok", **boot}
 
 
 @app.get("/how-it-works")

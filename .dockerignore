@@ -1,0 +1,25 @@
+.git
+.venv
+.python-version
+__pycache__
+*.py[cod]
+.pytest_cache
+.ruff_cache
+.env
+
+# Source PDFs and their extracted text are build-time reference material for
+# hand transcription. Nothing at runtime reads them — the fixtures are the input.
+sources/
+scripts/
+
+# Documentation that the app does not serve. HOW_IT_WORKS.md and
+# WHERE_THIS_GOES_NEXT.md are copied explicitly in the Dockerfile because two
+# routes read them at request time.
+docs/
+tests/
+README.md
+TODO.md
+Dockerfile
+.dockerignore
+docker-compose.yml
+render.yaml

@@ -25,11 +25,34 @@ learned layer would go and what the source could not supply.
 
 ## Run it
 
+Natively:
+
 ```bash
 uv sync
 uv run uvicorn app.web.main:app --reload
 uv run pytest
 ```
+
+Or in the container that actually ships:
+
+```bash
+docker compose up --build        # http://localhost:8000
+```
+
+Compose runs the same image and the same command Render runs, with `PORT`
+injected the same way, so the `$PORT` path is exercised locally rather than only
+in production. **Render does not read `docker-compose.yml`** — it builds the
+`Dockerfile` directly. Compose exists so you can run what you ship, not so the
+platform can consume it.
+
+`/health` reports what actually loaded — tickers, rule count, factor count and
+events per scenario — rather than merely that a socket is open. It is the
+blueprint's `healthCheckPath`.
+
+Fixtures are validated at boot, not lazily. A rule missing its source raises
+during startup, the server exits non-zero, and the deploy fails. Verified: a
+container started against a fixture with one `source` block removed exits with
+code 3 rather than serving a broken app.
 
 ## How it decides
 
@@ -80,10 +103,15 @@ decision we are making.
 
 ## Deploying
 
-`render.yaml` is a Render blueprint. Connect the repo as a Blueprint in the Render
-dashboard; build and start commands and the Python version are already set. The
-clean-install path (`pip install -r requirements.txt`, then the start command) has
-been verified from a fresh virtualenv.
+`render.yaml` is a Render blueprint using the Docker runtime. Connect the repo as a
+Blueprint in the Render dashboard; the Dockerfile path, build context and health
+check path are already set, and the Python version comes from the base image rather
+than any platform setting.
+
+Verified locally before committing: the image builds (138MB), runs as a non-root
+user, binds `0.0.0.0` on an injected `PORT` of 10000, serves all nine routes,
+reports healthy, stops gracefully in ~0.6s because `exec` in the entrypoint lets
+`SIGTERM` reach uvicorn, and exits non-zero when fixtures are invalid.
 
 ## Where the rest of the thinking is
 
