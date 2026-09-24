@@ -1,0 +1,19 @@
+name: "Guide Holds"
+description: >-
+  FY2028 commentary confirms the guide with backlog detail at the 2026-11-17
+  print. Driven entirely by an issuer disclosure, not a price. Re-entry trigger
+  fires: Buy at full weight.
+events:
+  - date: 2026-11-17
+    kind: guidance
+    ticker: NVDA
+    payload:
+      fy2028_commentary_pct: 72
+      backlog_detail: true
+    source:
+      doc: NVDA-memo
+      page: 47
+      quote: >-
+        2026-11-17 (company-confirmed). FY2028 commentary holding near 70%
+        with backlog detail means this workbook's central assumption is the
+        thing that was wrong.

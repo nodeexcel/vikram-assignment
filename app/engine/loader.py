@@ -3,7 +3,7 @@ from pathlib import Path
 import yaml
 from pydantic import ValidationError
 
-from app.engine.models import Factor, FixtureBundle, Ticker
+from app.engine.models import Factor, FixtureBundle, Ticker, Timeline
 
 FIXTURES_DIR = Path(__file__).parent.parent.parent / "fixtures"
 
@@ -68,6 +68,14 @@ def load_shared_factors(fixtures_dir: Path = FIXTURES_DIR) -> list[Factor]:
         return [Factor(**f) for f in data.get("factors", [])]
     except ValidationError as e:
         raise FixtureLoadError(f"invalid factors in {fixtures_dir / 'factors.yaml'}: {e}") from e
+
+
+def load_timeline(name: str, fixtures_dir: Path = FIXTURES_DIR) -> Timeline:
+    data = _read_yaml(fixtures_dir / "timelines" / f"{name}.yaml")
+    try:
+        return Timeline(**data)
+    except ValidationError as e:
+        raise FixtureLoadError(f"invalid timeline {name!r} in {fixtures_dir / 'timelines'}: {e}") from e
 
 
 def load_all_fixtures(

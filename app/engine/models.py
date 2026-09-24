@@ -191,6 +191,17 @@ class Event(BaseModel):
     source: Source | None = None
 
 
+class Timeline(BaseModel):
+    """A scenario's authored sequence of events (spec §8/§9). Not a claim — the
+    two futures are constructed, dated projections, not sourced facts; individual
+    events may still carry a source where they restate a dated trigger the memo
+    itself states (e.g. the 2026-11-17 print date)."""
+
+    name: str
+    description: str
+    events: list[Event]
+
+
 class FixtureBundle(BaseModel):
     ticker: Ticker
     research: Research

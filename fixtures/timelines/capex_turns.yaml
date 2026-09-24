@@ -1,0 +1,73 @@
+name: "Capex Turns"
+description: >-
+  FY2028 commentary at the 2026-11-17 print neither confirms nor breaks the
+  guide, so the base row holds and price drifts toward $200.09. Price may
+  cross $195.00 en route, but the stop is for existing holders only and no
+  position was ever opened, so it does not fire here. The decisive move is
+  later and still not a price: in the 2027-01-26 to 2027-02-06 window, two of
+  the four large hyperscalers guide capex flat or down, firing the exit/short
+  trigger. The same disclosure also re-rates AMZN's exposure to the same
+  credit-funded-capex factor, in the opposite direction (Tier 2 fan-out,
+  FEAT-20260924-1250-08).
+events:
+  - date: 2026-11-17
+    kind: guidance
+    ticker: NVDA
+    payload:
+      fy2028_commentary_pct: 55
+      backlog_detail: false
+    source:
+      doc: NVDA-memo
+      page: 45
+      quote: >-
+        language that neither confirms nor breaks the guide leaves them in
+        the 50% base row, drifting toward $200.09.
+
+  - date: 2026-11-20
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 210.00
+
+  - date: 2026-12-04
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 200.50
+
+  - date: 2027-01-08
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 194.20
+
+  - date: 2027-01-15
+    kind: price_close
+    ticker: NVDA
+    payload:
+      price_close: 191.80
+
+  - date: 2027-01-28
+    kind: third_party_guidance
+    ticker: NVDA
+    payload:
+      hyperscaler_capex_flat_or_down_count: 1
+
+  - date: 2027-01-28
+    kind: factor_shift
+    ticker: null
+    payload:
+      factor_id: hyperscaler_capex_financing_shift
+
+  - date: 2027-02-04
+    kind: third_party_guidance
+    ticker: NVDA
+    payload:
+      hyperscaler_capex_flat_or_down_count: 2
+    source:
+      doc: NVDA-memo
+      page: 47
+      quote: >-
+        Late January 2027 (2027-01-26 to 2027-02-06, estimated). Any two of
+        the four large hyperscalers guiding capex flat or down year over
+        year is the most direct available threat to the FY2028 guide.
