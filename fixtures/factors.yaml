@@ -1,0 +1,218 @@
+# Shared, ticker-agnostic factor state (spec §6.5). A factor's id/ring/force/label
+# are recorded once; direction/impact/weight/provenance are per ticker under
+# exposures. Ring decides propagation, not name.
+#
+# The two factors below (hyperscaler_capex_financing_shift, ai_infrastructure_buildout)
+# are the only verified ring-legal (sector/market) cross-ticker pairings — see spec §3.
+# NVDA's own weighted/promoted factor set additionally includes six factors with only
+# an NVDA exposure; AMZN's own factors are added in FEAT-20260924-1250-05.
+factors:
+  - id: hyperscaler_capex_financing_shift
+    ring: market
+    force: wave
+    label: "Hyperscaler capex turning credit-funded"
+    exposures:
+      NVDA:
+        local_id: 22
+        local_name: "Hyperscaler Capex Financing Shift"
+        direction: negative
+        impact: 0.90
+        weight: 13
+        source:
+          doc: NVDA-memo
+          page: 10
+          quote: >-
+            NVIDIA's revenue is its customers' capital expenditure, and that
+            capex has moved into the bond market - about $125.9B of
+            on-balance-sheet issuance by Meta, Alphabet and Amazon in under
+            five months, plus a roughly $27B off-balance-sheet SPV, with
+            Amazon's trailing-4Q capex at 102% of its trailing-4Q operating
+            cash flow. Demand has acquired a credit dependency it did not
+            have two years ago.
+        provenance_status: derived
+
+  - id: ai_infrastructure_buildout
+    ring: sector
+    force: wave
+    label: "AI infrastructure buildout wave"
+    exposures:
+      NVDA:
+        local_id: 11
+        local_name: "AI Infrastructure Buildout Wave"
+        direction: positive
+        impact: 0.95
+        source:
+          doc: NVDA-memo
+          page: 8
+          quote: >-
+            Data-centre semiconductor revenue is forecast to rise from
+            $477.1B in 2026 to $843.2B by 2030 - a 15.3% compound rate,
+            multiples of GDP growth, and enough that NVIDIA's revenue can
+            grow without gaining a single share point.
+        provenance_status: derived
+
+  # The remaining seven of NVDA's eight promoted/weighted factors. Each carries a
+  # weight (part of the memo's 100-point composition) and a ring per the theme
+  # report's own zone tag (external -> market, ecosystem -> sector, intrinsic ->
+  # internal). None has a verified AMZN counterpart, so each has exactly one
+  # exposure -- legal per §6.5 ("nothing to fan out to yet"), not a fan-out claim.
+  # Force type and impact are Light Cone (28-factor diagram) attributes the theme
+  # report's promoted-factor write-ups do not state; left unset rather than guessed.
+
+  - id: guidance-bet
+    ring: market
+    label: "Price, Terminal Value and the Guidance Bet"
+    exposures:
+      NVDA:
+        local_id: fc_06
+        local_name: "Price, Terminal Value and the Guidance Bet"
+        direction: negative
+        weight: 21
+        source:
+          doc: NVDA-theme
+          page: 29
+          quote: >-
+            fc_06 Price, Terminal Value and the Guidance Bet - zone
+            external, weight 21. In the AI complex the forward multiple is
+            a forecast of when growth fades rather than a score for
+            quality delivered, so money is made or lost on where a
+            company's value sits in time and how much premium it has to
+            lose - which means the toll booths paid on gross capex and the
+            zero-premium names carry this theme very differently from the
+            70x challengers and the debt-funded builders.
+        provenance_status: derived
+
+  - id: share-ceded-to-custom-silicon
+    ring: market
+    label: "Share Ceded to Custom Silicon"
+    exposures:
+      NVDA:
+        local_id: fc_01
+        local_name: "Share Ceded to Custom Silicon"
+        direction: negative
+        weight: 20
+        source:
+          doc: NVDA-theme
+          page: 28
+          quote: >-
+            fc_01 Share Ceded to Custom Silicon - zone external, weight
+            20. Custom AI silicon pays the enablers rather than the
+            contestants: the durable money is in design services,
+            connectivity content per XPU, packaging and HBM - layers
+            billed per accelerator DESIGN and per unit rather than per
+            winner - while the clearest loser is not the market leader but
+            the merchant second source bidding for the same
+            diversification budget.
+        provenance_status: derived
+
+  - id: rack-scale-platform-lock-in
+    ring: sector
+    label: "Rack-Scale Platform Lock-In"
+    exposures:
+      NVDA:
+        local_id: fc_07
+        local_name: "Rack-Scale Platform Lock-In"
+        direction: positive
+        weight: 17
+        source:
+          doc: NVDA-theme
+          page: 28
+          quote: >-
+            fc_07 Rack-Scale Platform Lock-In - zone ecosystem, weight 17.
+            The rack shift pays whoever supplies what goes inside the
+            cabinet - power, cooling, optics, copper and switch silicon -
+            and taxes whoever merely assembles it, so most of the money
+            this theme moves sits outside the accelerator vendors and is
+            indifferent to which architecture wins.
+        provenance_status: derived
+
+  - id: self-funded-demand-loop
+    ring: sector
+    label: "Self-Funded Demand Loop"
+    exposures:
+      NVDA:
+        local_id: fc_08
+        local_name: "Self-Funded Demand Loop"
+        direction: negative
+        weight: 7
+        source:
+          doc: NVDA-theme
+          page: 29
+          quote: >-
+            fc_08 Self-Funded Demand Loop - zone ecosystem, weight 7.
+            Vendor financing moves the money to whoever RECEIVES the
+            instrument - credit-enhanced landlords, underwritten neoclouds
+            and the fee layer assembling third-party pools - and takes it
+            from whoever must WRITE it with a smaller balance sheet; the
+            cost is invisible on every income statement until a rating
+            method or a refused extension makes it visible.
+        provenance_status: derived
+
+  - id: founder-led-execution-unplanned-succession
+    ring: internal
+    label: "Founder-Led Execution, Unplanned Succession"
+    exposures:
+      NVDA:
+        local_id: fc_09
+        local_name: "Founder-Led Execution, Unplanned Succession"
+        direction: negative
+        weight: 8
+        source:
+          doc: NVDA-theme
+          page: 29
+          quote: >-
+            fc_09 Founder-Led Execution, Unplanned Succession - zone
+            intrinsic, weight 8. The founder premium is the only large
+            equity premium legally attached to a person rather than to an
+            asset, so it screens off public filings: the theme pays the
+            companies that have dated the handover and charges the ones
+            whose super-voting control has removed the board's ability to
+            make one.
+        provenance_status: derived
+
+  - id: earnings-quality-investment-book
+    ring: internal
+    label: "Earnings Quality and the Investment Book"
+    exposures:
+      NVDA:
+        local_id: fc_10
+        local_name: "Earnings Quality and the Investment Book"
+        direction: negative
+        weight: 9
+        source:
+          doc: NVDA-theme
+          page: 29
+          quote: >-
+            fc_10 Earnings Quality and the Investment Book - zone
+            intrinsic, weight 9. An accounting rule pushes unrealised
+            gains on private stakes straight into net income, so at eleven
+            large companies - Alphabet at ~78% of H1 2026 profit, Nebius
+            at more than 100% of a quarter's - the trailing multiple is
+            being taken off a number that is part operating business and
+            part venture portfolio; the money is in owning the force
+            through vehicles the market already discounts, and in the
+            first quarter the marks do not repeat.
+        provenance_status: derived
+
+  - id: operating-leverage-already-spent
+    ring: internal
+    label: "Operating Leverage Already Spent"
+    exposures:
+      NVDA:
+        local_id: fc_11
+        local_name: "Operating Leverage Already Spent"
+        direction: negative
+        weight: 5
+        source:
+          doc: NVDA-memo
+          page: 26
+          quote: >-
+            Operating Leverage Already Spent (weight 5, intrinsic circle).
+            Of the 27.9 percentage points of EBIT margin gained between
+            FY2022 and FY2026, 18.1 points came from operating expense
+            falling from 27.6% to 9.5% of revenue, with SG&A from 8.0% to
+            2.1%. That lever is spent, and it runs backwards at the same
+            gearing: FY2023 is the observed proof - revenue of $26.97B, up
+            0.2%, while GAAP diluted EPS fell 55% and EBIT margin went
+            from 37.3% to 15.7%.
+        provenance_status: derived

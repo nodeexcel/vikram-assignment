@@ -1,0 +1,16 @@
+ticker: NVDA
+as_of: 2026-09-08
+reference_price: 230.36
+stance: Hold
+conviction: Low
+position: none
+horizon: 6-12 months tactical
+spring_state: Neutral
+source:
+  doc: NVDA-memo
+  page: 46
+  quote: >-
+    So what: **Hold**, **Low** conviction, **no position initiated** - and
+    because the platform's own rule would open one here, the override is the
+    instruction that matters
+provenance_status: derived

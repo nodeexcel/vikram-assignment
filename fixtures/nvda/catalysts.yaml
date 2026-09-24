@@ -1,0 +1,65 @@
+kill_switches:
+  - id: frontier-training-non-nvidia-silicon
+    name: "Frontier training run of consequence on non-NVIDIA silicon"
+    metric: frontier_training_run_on_non_nvidia_silicon
+    threshold: "at acceptable utilisation"
+    cadence: continuous
+    watch_period: "most likely 2027-2028"
+    source:
+      doc: NVDA-memo
+      page: 38
+      quote: >-
+        A frontier training run of consequence completes on non-NVIDIA
+        silicon at acceptable utilisation - continuous watch, most likely
+        2027-2028. Market Position leaves Ocean; the tier leaves N-of-1.
+    provenance_status: derived
+
+  - id: networking-attach-convergence
+    name: "Networking attach growth converges with segment growth"
+    metric: networking_attach_growth_gap_points
+    threshold: "within ~10 points, for two consecutive quarters, while share still falls"
+    cadence: quarterly
+    watch_period: "2027 signal"
+    consecutive_periods: 2
+    source:
+      doc: NVDA-memo
+      page: 38
+      quote: >-
+        Networking attach growth converges within roughly 10 points of
+        data-centre segment growth for two consecutive quarters while share
+        still falls - quarterly, a 2027 signal. Turns the Plausible
+        rebuttal above into a wrong one.
+    provenance_status: derived
+
+  - id: taiwan-strait-interruption
+    name: "Taiwan Strait blockade, quarantine or sustained export interruption"
+    metric: taiwan_strait_interruption
+    threshold: "any occurrence"
+    cadence: continuous
+    watch_period: "unhedgeable before TSMC Arizona mass production in 2028"
+    source:
+      doc: NVDA-memo
+      page: 38
+      quote: >-
+        Any Taiwan Strait blockade, quarantine or sustained export
+        interruption - unhedgeable before TSMC's Arizona capacity reaches
+        mass production in 2028. The environment goes to Mud and the rest
+        is irrelevant for the duration.
+    provenance_status: derived
+
+  - id: cash-conversion-deterioration
+    name: "Cash conversion falls below floor with rising accruals"
+    metric: cash_conversion_pct
+    threshold: "below 65% unadjusted (or 78% adjusted) for two consecutive quarters with accruals above 20%"
+    cadence: quarterly
+    watch_period: "current readings 69.7% / ~83.6% / 18.3%"
+    consecutive_periods: 2
+    source:
+      doc: NVDA-memo
+      page: 38
+      quote: >-
+        Cash conversion below 65% unadjusted (or 78% adjusted) for two
+        consecutive quarters with accruals above 20% - current readings
+        69.7%, about 83.6%, 18.3%. The drift would be structural rather
+        than a denominator effect.
+    provenance_status: derived

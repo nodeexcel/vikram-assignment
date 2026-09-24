@@ -89,7 +89,10 @@ class Exposure(Sourced):
     local_id: int | str
     local_name: str
     direction: Literal["positive", "negative"]
-    impact: float = Field(ge=0, le=1)
+    # Impact (0-1) is a Light Cone diagram attribute. The theme report's promoted-
+    # factor descriptions give weight but not impact for several factors — left
+    # unset rather than guessed, per "derived, not invented".
+    impact: float | None = Field(default=None, ge=0, le=1)
     weight: int | None = Field(default=None, ge=0, le=100)
 
 
@@ -101,7 +104,10 @@ class Factor(BaseModel):
 
     id: str
     ring: Literal["internal", "sector", "market"]
-    force: Literal["wind", "wave", "mud"]
+    # Force type is a Light Cone (28-factor diagram) attribute. The memo and theme
+    # report do not state it for several of the 8 promoted/weighted factors — left
+    # unset rather than guessed for those, per "derived, not invented".
+    force: Literal["wind", "wave", "mud"] | None = None
     label: str
     exposures: dict[Ticker, Exposure]
 
@@ -127,7 +133,9 @@ class ScenarioLeg(Sourced):
 class ScenarioSet(BaseModel):
     horizon: Literal["intrinsic_3_5yr", "tactical_12mo"]
     legs: list[ScenarioLeg]
-    weighted_price: float
+    # The 12-month tactical table's weighted row carries no price, only a return —
+    # the memo prints "-" for that cell.
+    weighted_price: float | None = None
     weighted_return_pct: float
 
 

@@ -1,0 +1,147 @@
+rules:
+  - id: reentry-buy-full-weight
+    name: "Re-entry: FY2028 commentary near 70% with backlog detail"
+    ticker: NVDA
+    event_date: 2026-11-17
+    trigger:
+      metric: fy2028_commentary_pct_with_backlog_detail
+      comparator: gte
+      threshold: 70
+    action: buy_full_weight
+    source:
+      doc: NVDA-memo
+      page: 47
+      quote: >-
+        2026-11-17 (company-confirmed). FY2028 commentary holding near 70%
+        with backlog detail means this workbook's central assumption is the
+        thing that was wrong, the 20.3x forward EV/EBITDA is genuinely low,
+        and the rating moves to Buy at a full weight rather than a starter.
+        This is the re-entry trigger.
+    provenance_status: derived
+
+  - id: bear-row-guidance-below-45
+    name: "Bear row: FY2028 commentary softens below 45%"
+    ticker: NVDA
+    event_date: 2026-11-17
+    trigger:
+      metric: fy2028_commentary_pct
+      comparator: lt
+      threshold: 45
+    action: move_to_bear_row
+    source:
+      doc: NVDA-memo
+      page: 45
+      quote: >-
+        On 2026-11-17 NVIDIA reports Q3 FY2027 against a guided $108.0B
+        revenue and 74.0% gross margin - but the print is not the catalyst,
+        the FY2028 commentary attached to it is. Holding near 70% with
+        backlog detail puts the reader in the bull row; softening below 45%
+        puts them in the bear row; language that neither confirms nor
+        breaks the guide leaves them in the 50% base row, drifting toward
+        $200.09.
+    provenance_status: derived
+
+  - id: base-row-neither-confirms-nor-breaks
+    name: "Base row: FY2028 commentary neither confirms nor breaks the guide"
+    ticker: NVDA
+    event_date: 2026-11-17
+    trigger:
+      metric: fy2028_commentary_pct
+      comparator: gte
+      threshold: 45
+      window: "45-70%, neither the re-entry nor the bear-row condition fires"
+    action: move_to_base_row_drift_200_09
+    source:
+      doc: NVDA-memo
+      page: 45
+      quote: >-
+        On 2026-11-17 NVIDIA reports Q3 FY2027 against a guided $108.0B
+        revenue and 74.0% gross margin - but the print is not the catalyst,
+        the FY2028 commentary attached to it is. Holding near 70% with
+        backlog detail puts the reader in the bull row; softening below 45%
+        puts them in the bear row; language that neither confirms nor
+        breaks the guide leaves them in the 50% base row, drifting toward
+        $200.09.
+    provenance_status: derived
+
+  - id: exit-short-hyperscaler-capex
+    name: "Exit/short: any two of four hyperscalers guide capex flat or down"
+    ticker: NVDA
+    trigger:
+      metric: hyperscaler_capex_flat_or_down_count
+      comparator: gte
+      threshold: 2
+      window: "2027-01-26 to 2027-02-06 (estimated)"
+    action: exit_short
+    source:
+      doc: NVDA-memo
+      page: 47
+      quote: >-
+        Late January 2027 (2027-01-26 to 2027-02-06, estimated). Any two of
+        the four large hyperscalers guiding capex flat or down year over
+        year is the most direct available threat to the FY2028 guide,
+        because roughly half of Data Center revenue is four customers.
+    provenance_status: derived
+
+  - id: sell-formal-guide-below-45
+    name: "Sell: formal FY2028 guide comes in below 45% growth"
+    ticker: NVDA
+    trigger:
+      metric: formal_fy2028_guide_pct
+      comparator: lt
+      threshold: 45
+      window: "on or around 2027-02-24 (estimated)"
+    action: sell
+    source:
+      doc: NVDA-memo
+      page: 47
+      quote: >-
+        On or around 2027-02-24 (estimated). The formal FY2028 guide. Below
+        45% growth, the assumption holding up the multiple has broken and
+        the rating moves to Sell.
+    provenance_status: derived
+
+  - id: stop-195-two-consecutive-weekly-closes
+    name: "Stop: $195.00 on two consecutive weekly closes"
+    ticker: NVDA
+    applies_when: "position != none"
+    trigger:
+      metric: price_close
+      comparator: lte
+      threshold: 195.00
+      consecutive_periods: 2
+    action: stop_exit
+    source:
+      doc: NVDA-memo
+      page: 46
+      quote: >-
+        The discipline that does apply is a stop at $195.00 on two
+        consecutive weekly closes - -15.3% from the $230.36 reference
+        price.
+    provenance_status: derived
+
+overrides:
+  - id: neutral-spring-starter-position-declined
+    rule_id: platform-neutral-spring-starter-position
+    would_have_done: "Open a starter position (roughly one-third weight)"
+    actual: "No new weight initiated"
+    reason: >-
+      A probability-weighted 12-month return of -13.1% against a ceiling of
+      +2.7% in the single best of three scenarios means opening length would
+      follow a rule against the analysis the rule exists to serve.
+    actor: memo
+    source:
+      doc: NVDA-memo
+      page: 46
+      quote: >-
+        The spring state is Neutral, and the platform's entry logic maps a
+        Neutral spring to a starter position. Applied mechanically here it
+        would open roughly a one-third weight. This memo declines it, on
+        this bag's own arithmetic: a probability-weighted 12-month return of
+        -13.1% against a ceiling of +2.7% in the single best of three
+        scenarios. Opening length into that distribution would be following
+        a rule against the analysis the rule exists to serve. A Hold means
+        hold. With no existing position, the correct action is no action.
+        The rule is a default for when exposure is wanted; it is not a
+        reason to want exposure.
+    provenance_status: derived
