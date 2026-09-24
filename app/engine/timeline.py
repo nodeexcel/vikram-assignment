@@ -1,5 +1,6 @@
+from app.engine.factors import factor_shift_proposals
 from app.engine.log import DecisionEntry, DecisionLog
-from app.engine.models import Event, Override, Research, Rule
+from app.engine.models import Event, Factor, Override, Research, Rule
 from app.engine.rules import ConsecutivePeriodTracker, event_in_rule_window, single_event_satisfies
 
 # Actions that change position state, read off the rule's own `action` string.
@@ -33,10 +34,13 @@ def initial_state_event(research: Research) -> Event:
     )
 
 
-def run(rules: list[Rule], events: list[Event], overrides: list[Override] = ()) -> DecisionLog:
-    """Tier 1 run loop (spec §6.2). Pure function: same rules + events always
-    produce the same log. No wall-clock reads, no RNG, no dict/set-iteration
-    dependence — sort_events() fixes the only order-sensitive step.
+def run(
+    rules: list[Rule], events: list[Event], overrides: list[Override] = (), factors: list[Factor] = ()
+) -> DecisionLog:
+    """Tier 1 + Tier 2 run loop (spec §6.2, §6.5). Pure function: same rules +
+    events + factors always produce the same log. No wall-clock reads, no RNG, no
+    dict/set-iteration dependence — sort_events() fixes the only order-sensitive
+    step.
 
     Position starts at "none" (the memo's own starting state) and updates from
     each fired rule's action, so requires_existing_position (the $195 stop is for
@@ -44,7 +48,11 @@ def run(rules: list[Rule], events: list[Event], overrides: list[Override] = ()) 
 
     A rule with a matching override (spec §6.4) never applies its action — the
     log records the override instead of a plain rule_fired, with what the rule
-    would have done, what actually happened, and why."""
+    would have done, what actually happened, and why.
+
+    A factor_shift event logs a proposal per affected ticker (Tier 2, §6.5) and
+    never touches position — a proposal only becomes real once a human response
+    is recorded via factors.respond_to_proposal(), which this loop does not call."""
     override_by_rule_id = {o.rule_id: o for o in overrides}
     log = DecisionLog()
     tracker = ConsecutivePeriodTracker()
@@ -52,6 +60,11 @@ def run(rules: list[Rule], events: list[Event], overrides: list[Override] = ()) 
     position = "none"
 
     for event in sort_events(events):
+        if event.kind == "factor_shift":
+            for proposal in factor_shift_proposals(list(factors), event):
+                log.append(proposal)
+            continue
+
         for rule in rules:
             if rule.id in fired_rule_ids:
                 continue
@@ -86,6 +99,7 @@ def run(rules: list[Rule], events: list[Event], overrides: list[Override] = ()) 
                             reason=override.reason,
                             source=override.source,
                             would_have_done=override.would_have_done,
+                            actor=override.actor,
                         )
                     )
                 else:

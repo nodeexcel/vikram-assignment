@@ -3,7 +3,7 @@ from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.templating import Jinja2Templates
 
-from app.engine.loader import load_ticker_fixtures, load_timeline
+from app.engine.loader import load_shared_factors, load_ticker_fixtures, load_timeline
 from app.engine.timeline import initial_state_event, run
 
 app = FastAPI(title="Lexo Trading Decision System")
@@ -23,10 +23,11 @@ def determinism(request: Request):
     both canonical hashes side by side with a match indicator. "Show us that it
     holds" — shown, not just asserted in a test file nobody but us reads."""
     bundle = load_ticker_fixtures("NVDA")
+    factors = load_shared_factors()
     checks = []
     for scenario in SCENARIOS:
         events = [initial_state_event(bundle.research), *load_timeline(scenario).events]
-        hash_a = run(bundle.rules, events, bundle.overrides).canonical_hash()
-        hash_b = run(bundle.rules, events, bundle.overrides).canonical_hash()
+        hash_a = run(bundle.rules, events, bundle.overrides, factors).canonical_hash()
+        hash_b = run(bundle.rules, events, bundle.overrides, factors).canonical_hash()
         checks.append({"scenario": scenario, "hash_a": hash_a, "hash_b": hash_b, "match": hash_a == hash_b})
     return templates.TemplateResponse(request, "determinism.html", {"checks": checks})

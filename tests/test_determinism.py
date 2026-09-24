@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from app.engine.loader import load_ticker_fixtures, load_timeline
+from app.engine.loader import load_shared_factors, load_ticker_fixtures, load_timeline
 from app.engine.scenario_hash import scenario_hash
 from app.engine.timeline import initial_state_event, run
 
@@ -16,8 +16,8 @@ REPO_ROOT = Path(__file__).parent.parent
 # (spec §7). Regenerate deliberately with:
 #   uv run python -m app.engine.scenario_hash <scenario>
 EXPECTED_HASHES = {
-    "guide_holds": "90d17f97f273b38bde1f7354b51136e668372a5a2032df5ac1763394f9eb645a",
-    "capex_turns": "8a4b16f7b425a02aa0cdf2c81007373479847ad3517a44323f685071af38a130",
+    "guide_holds": "d0c9116cd02ce1d022e5b159cd1024945ea94858469833d46f701b0385e0947a",
+    "capex_turns": "8d36a79b35d927688bc0c995c0255f1c3235df3ecf42e07dea0add23e07dc94f",
 }
 
 
@@ -29,9 +29,10 @@ def test_expected_hash_recorded(scenario):
 @pytest.mark.parametrize("scenario", ["guide_holds", "capex_turns"])
 def test_same_process_run_twice_matches(scenario):
     bundle = load_ticker_fixtures("NVDA")
+    factors = load_shared_factors()
     events = [initial_state_event(bundle.research), *load_timeline(scenario).events]
-    hash_a = run(bundle.rules, events, bundle.overrides).canonical_hash()
-    hash_b = run(bundle.rules, events, bundle.overrides).canonical_hash()
+    hash_a = run(bundle.rules, events, bundle.overrides, factors).canonical_hash()
+    hash_b = run(bundle.rules, events, bundle.overrides, factors).canonical_hash()
     assert hash_a == hash_b
 
 
