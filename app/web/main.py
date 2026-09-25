@@ -96,6 +96,44 @@ def position_prose(position: str) -> str:
 
 templates.env.filters["position_prose"] = position_prose
 
+_COMPARATOR_SYMBOL = {"gte": "\u2265", "lte": "\u2264", "gt": ">", "lt": "<", "eq": "is"}
+
+
+def trigger_prose(trigger) -> str:
+    """A rule's machine-readable condition, restated on one line. The page shows
+    the memo's sentence and the engine's condition side by side on purpose: the
+    gap between them is exactly the judgement a reader should be able to audit."""
+    parts = [f"{trigger.metric} {_COMPARATOR_SYMBOL[trigger.comparator]} {trigger.threshold}"]
+    if trigger.upper_threshold is not None:
+        parts.append(f"and < {trigger.upper_threshold}")
+    if trigger.requires_backlog_detail:
+        parts.append("and backlog detail disclosed")
+    if trigger.consecutive_periods:
+        parts.append(f"on {trigger.consecutive_periods} consecutive {trigger.period_unit} closes")
+    if trigger.window_start:
+        parts.append(f"within {trigger.window_start} to {trigger.window_end}")
+    return " ".join(parts)
+
+
+def group_position(rule, rules) -> str | None:
+    """Grouped rules are tried in list order and the first match wins, so a later
+    member's condition alone understates it: base row reads ">= 45" but must not
+    fire when the re-entry rule already has. Say so on the rule itself rather than
+    leaving a reader to infer an exclusion the line does not show."""
+    if not rule.group:
+        return None
+    members = [r for r in rules if r.group == rule.group]
+    index = members.index(rule)
+    if index == 0:
+        return f"tried first of {len(members)} rules for this date; the first match wins"
+    return f"reached only if the {index} rule{'s' if index > 1 else ''} above it did not match"
+
+
+templates.env.globals["group_position"] = group_position
+
+
+templates.env.filters["trigger_prose"] = trigger_prose
+
 
 def _inline_markdown(text: str) -> str:
     escaped = str(escape(text))
@@ -271,7 +309,21 @@ CUSTOM_SILICON_OBSERVATION = {
 
 @app.get("/")
 def index(request: Request):
-    return templates.TemplateResponse(request, "index.html")
+    """The landing hero is the memo's own conclusion, read from the fixtures
+    rather than retyped into the template — so the headline on the front page
+    carries the same provenance as everything else and cannot drift from it."""
+    bundle = load_ticker_fixtures("NVDA")
+    intrinsic = next(s for s in bundle.scenarios if s.horizon == "intrinsic_3_5yr")
+    reentry = next((r for r in bundle.rules if r.id == "reentry-buy-full-weight"), None)
+    return templates.TemplateResponse(
+        request,
+        "index.html",
+        {
+            "research": bundle.research,
+            "intrinsic": intrinsic,
+            "resolution_date": reentry.event_date if reentry else None,
+        },
+    )
 
 
 @app.get("/research")
@@ -398,13 +450,26 @@ def timeline_view(request: Request, scenario: str):
     # render after a 2027-02-04 entry. Sort by (date, id) for display only;
     # the underlying log's append order (and hash) is untouched.
     entries_in_date_order = sorted(log.entries, key=lambda e: (e.date, e.id))
+    # Show the position only where it CHANGED. Repeating "no position" on every
+    # row is noise on a page whose whole subject is position changing over time,
+    # and it buries the two rows where it actually moves.
+    position_changed_at: set[int] = set()
+    previous = None
+    for entry in entries_in_date_order:
+        if entry.position_after is not None and entry.position_after != previous:
+            position_changed_at.add(entry.id)
+            previous = entry.position_after
+    other = next(s for s in SCENARIOS if s != scenario)
     return templates.TemplateResponse(
         request,
         "timeline.html",
         {
             "scenario": scenario,
-            "scenarios": SCENARIOS,
+            "scenarios": [other],
+            "scenario_meta": load_timeline(scenario),
+            "other_name": load_timeline(other).name,
             "entries": entries_in_date_order,
+            "position_changed_at": position_changed_at,
             "responses_by_proposal": responses_by_proposal,
         },
     )

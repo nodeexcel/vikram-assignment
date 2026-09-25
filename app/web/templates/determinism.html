@@ -1,29 +1,32 @@
 {% extends "base.html" %}
-{% block title %}Determinism check — Lexo Trading Decision System{% endblock %}
+{% block title %}Determinism check — Lexo{% endblock %}
 {% block content %}
   <h1>Determinism check</h1>
-  <p>Each scenario's Tier 1 decision log is run twice, independently, and canonically
-     hashed (sorted keys, in-world dates only, no execution timestamps — spec §7).
-     Same inputs must produce the same hash every time.</p>
-  <table>
-    <thead>
-      <tr><th>Scenario</th><th>Run A</th><th>Run B</th><th>Result</th></tr>
-    </thead>
-    <tbody>
-      {% for c in checks %}
-      <tr>
-        <td>{{ c.scenario }}</td>
-        <td><code>{{ c.hash_a }}</code></td>
-        <td><code>{{ c.hash_b }}</code></td>
-        <td>
-          {% if c.match %}
-            <span class="match">MATCH</span>
-          {% else %}
-            <span class="mismatch">MISMATCH</span>
-          {% endif %}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <p class="standfirst">The brief asks us to show that determinism holds, not to
+     assert it. Each scenario's decision log is computed twice, right now, on this
+     request, and hashed. Reload the page and the hashes stay the same.</p>
+
+  {% for c in checks %}
+  <div class="entry">
+    <div class="entry-head">
+      <span class="badge {{ 'badge-derived' if c.match else 'badge-added' }}">{{ 'identical' if c.match else 'DIFFERENT' }}</span>
+    </div>
+    <h3 class="entry-title">{{ c.scenario | replace('_', ' ') }}</h3>
+    <dl class="facts">
+      <div><dt>First run</dt><dd class="hash">{{ c.hash_a }}</dd></div>
+      <div><dt>Second run</dt><dd class="hash">{{ c.hash_b }}</dd></div>
+    </dl>
+  </div>
+  {% endfor %}
+
+  <h2>What is being hashed, and what is not</h2>
+  <p>The log is serialised to canonical JSON before hashing: keys sorted, fixed
+     separators, and only in-world event dates. No execution timestamp goes in, or
+     every run would differ by construction and the check would be worthless.</p>
+  <p>Two runs in one process is the weakest of the three checks and the only one you
+     can see here. The test suite also re-runs each scenario in a separate process
+     with <code>PYTHONHASHSEED</code> varied, which is what actually rules out a
+     hidden dependence on dictionary or set iteration order, and compares against a
+     hash recorded in the suite so a change in decision logic fails loudly instead of
+     producing a different but self-consistent answer.</p>
 {% endblock %}

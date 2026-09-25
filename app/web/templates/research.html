@@ -2,7 +2,11 @@
 {% block title %}What the research concludes — Lexo{% endblock %}
 {% block content %}
   <h1>What the research concludes</h1>
-  <p>NVDA · reference price ${{ "%.2f"|format(research.reference_price) }} · as of {{ research.as_of }}</p>
+  <dl class="facts">
+    <div><dt>Ticker</dt><dd>NVDA</dd></div>
+    <div><dt>Reference price</dt><dd>${{ "%.2f"|format(research.reference_price) }}</dd></div>
+    <div><dt>As of</dt><dd>{{ research.as_of }}</dd></div>
+  </dl>
 
   <h2>Verdict — 3&ndash;5 year intrinsic</h2>
   <p>{{ research.verdict.text }}</p>
@@ -11,67 +15,75 @@
   </blockquote>
 
   <h2>Stance — 6&ndash;12 month tactical</h2>
-  <p><strong>{{ research.stance }}</strong> · conviction {{ research.conviction }} ·
-     position: {{ research.position }} · horizon: {{ research.horizon }}
-     {% if research.spring_state %}· spring state: {{ research.spring_state }}{% endif %}</p>
+  <dl class="facts">
+    <div><dt>Rating</dt><dd>{{ research.stance }}</dd></div>
+    <div><dt>Conviction</dt><dd>{{ research.conviction }}</dd></div>
+    <div><dt>Position</dt><dd>{{ research.position }}</dd></div>
+    <div><dt>Horizon</dt><dd>{{ research.horizon }}</dd></div>
+    {% if research.spring_state %}<div><dt>Spring state</dt><dd>{{ research.spring_state }}</dd></div>{% endif %}
+  </dl>
   <blockquote>{{ research.source.quote | render_quote }}
     <div class="source-cite">{{ research.source.doc }}, p.{{ research.source.page }}</div>
   </blockquote>
 
-  <p><em>The verdict and the stance are different measures on different clocks and
-     neither substitutes for the other — the memo is explicit about this, and this
-     page keeps them separate rather than collapsing them into one number.</em></p>
+  <p class="note">The verdict and the stance are different measures on different
+     clocks and neither substitutes for the other. The memo is explicit about this,
+     so this page keeps them apart rather than collapsing them into one number.</p>
 
   <h2>Intrinsic scenarios (3&ndash;5yr)</h2>
+  <div class="table-wrap">
   <table>
-    <thead><tr><th>Scenario</th><th>Probability</th><th>Price</th><th>vs reference</th></tr></thead>
+    <thead><tr><th>Scenario</th><th class="num">Probability</th><th class="num">Price</th><th class="num">vs reference</th></tr></thead>
     <tbody>
       {% for leg in intrinsic.legs %}
       <tr>
         <td>{{ leg.label }}</td>
-        <td>{{ (leg.probability * 100) | round(0) | int }}%</td>
-        <td>${{ "%.2f"|format(leg.price) }}</td>
-        <td>{{ leg.return_pct }}%</td>
+        <td class="num">{{ (leg.probability * 100) | round(0) | int }}%</td>
+        <td class="num">${{ "%.2f"|format(leg.price) }}</td>
+        <td class="num">{{ leg.return_pct }}%</td>
       </tr>
       {% endfor %}
-      <tr>
-        <td><strong>Probability-weighted</strong></td>
-        <td>100%</td>
-        <td>${{ "%.2f"|format(intrinsic.weighted_price) }}</td>
-        <td>{{ intrinsic.weighted_return_pct }}%</td>
+      <tr class="total">
+        <td>Probability-weighted</td>
+        <td class="num">100%</td>
+        <td class="num">${{ "%.2f"|format(intrinsic.weighted_price) }}</td>
+        <td class="num">{{ intrinsic.weighted_return_pct }}%</td>
       </tr>
     </tbody>
   </table>
+  </div>
 
   <h2>12-month price targets (tactical)</h2>
+  <div class="table-wrap">
   <table>
-    <thead><tr><th>Scenario</th><th>Probability</th><th>Price target</th><th>Return</th></tr></thead>
+    <thead><tr><th>Scenario</th><th class="num">Probability</th><th class="num">Price target</th><th class="num">Return</th></tr></thead>
     <tbody>
       {% for leg in tactical.legs %}
       <tr>
         <td>{{ leg.label }}</td>
-        <td>{{ (leg.probability * 100) | round(0) | int }}%</td>
-        <td>${{ "%.2f"|format(leg.price) }}</td>
-        <td>{{ leg.return_pct }}%</td>
+        <td class="num">{{ (leg.probability * 100) | round(0) | int }}%</td>
+        <td class="num">${{ "%.2f"|format(leg.price) }}</td>
+        <td class="num">{{ leg.return_pct }}%</td>
       </tr>
       {% endfor %}
-      <tr>
-        <td><strong>Probability-weighted</strong></td>
-        <td>100%</td>
-        <td>&mdash;</td>
-        <td>{{ tactical.weighted_return_pct }}%</td>
+      <tr class="total">
+        <td>Probability-weighted</td>
+        <td class="num">100%</td>
+        <td class="num">&mdash;</td>
+        <td class="num">{{ tactical.weighted_return_pct }}%</td>
       </tr>
     </tbody>
   </table>
-  <p class="source-cite">The weighted price target shows "—" because the memo's own
+  </div>
+  <p class="note">The weighted price target shows "—" because the memo's own
      table only gives a weighted return here, not a weighted price — this build
      doesn't back-compute one the source didn't state.</p>
-  <p><em>The 25% / 50% / 25% probabilities above are fixed priors transcribed from
+  <p class="note">The 25% / 50% / 25% probabilities above are fixed priors transcribed from
      the memo, not learned — this build does not train or serve a model. A
      learned estimator would replace them with probabilities conditioned on
      observed disclosures as they arrive, rather than one static split fixed at
      publication time. See <a href="/where-this-goes-next">where this goes
-     next</a> for what that would take.</em></p>
+     next</a> for what that would take.</p>
 
   <h2>The dated triggers that change this rating</h2>
   <div class="table-wrap">
@@ -80,7 +92,7 @@
     <tbody>
       {% for rule in dated_rules %}
       <tr>
-        <td>{{ rule.event_date or (rule.trigger.window_start ~ ' to ' ~ rule.trigger.window_end) }}</td>
+        <td class="nowrap">{{ rule.event_date or (rule.trigger.window_start ~ ' to ' ~ rule.trigger.window_end) }}</td>
         <td>{{ rule.name }}</td>
         <td>{{ rule.action | action_prose }}</td>
       </tr>
@@ -91,7 +103,7 @@
   <p>See <a href="/rules">rules &amp; sources</a> for the verbatim quote behind each one.</p>
 
   <h2>Kill switches</h2>
-  <p>Separate from the weighted factor composition — each with its own watch cadence.</p>
+  <p class="note">Separate from the weighted factor composition, each with its own watch cadence.</p>
   <ul>
     {% for ks in kill_switches %}
     <li><strong>{{ ks.name }}</strong> ({{ ks.cadence }}, {{ ks.watch_period }}) — {{ ks.threshold }}</li>

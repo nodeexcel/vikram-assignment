@@ -7,21 +7,21 @@
 
   <h2>Rules</h2>
   {% for rule in rules %}
-  <div id="rule-{{ rule.id }}" style="margin-bottom: 1.5rem;">
-    <h3>{{ rule.name }}
-      {% if rule.provenance_status == 'derived' %}<span class="badge badge-derived">derived</span>{% endif %}
-      {% if rule.provenance_status == 'partial' %}<span class="badge badge-partial">partial</span>{% endif %}
-      {% if rule.provenance_status == 'added' %}<span class="badge badge-added">added</span>{% endif %}
-    </h3>
-    <p>action: <code>{{ rule.action }}</code>{% if rule.event_date %} · date: {{ rule.event_date }}{% endif %}
-       {% if rule.requires_existing_position %} · existing holders only{% endif %}</p>
+  <div class="entry" id="rule-{{ rule.id }}">
+    <div class="entry-head">
+      {% if rule.event_date %}<span class="entry-date">{{ rule.event_date }}</span>{% endif %}
+      <span class="badge badge-{{ rule.provenance_status }}">{{ rule.provenance_status }}</span>
+      {% if rule.requires_existing_position %}<span class="entry-ticker">existing holders only</span>{% endif %}
+    </div>
+    <h3 class="entry-title">{{ rule.name }}</h3>
+    <p class="logic">if <b>{{ rule.trigger | trigger_prose }}</b><br>then <b>{{ rule.action | action_prose }}</b>{% set gp = group_position(rule, rules) %}{% if gp %}<br><span>{{ gp }}</span>{% endif %}</p>
     {% if rule.source %}
     <blockquote>{{ rule.source.quote | render_quote }}
-      <div class="source-cite">{{ rule.source.doc }}, p.{{ rule.source.page }}</div>
+      <div class="source-cite">{{ rule.source.doc }}, page {{ rule.source.page }}</div>
     </blockquote>
     {% endif %}
     {% if rule.gap_note %}
-    <p><strong>Gap the source itself admits:</strong> <em>{{ rule.gap_note }}</em></p>
+    <p class="note"><strong>A gap the source itself admits:</strong> {{ rule.gap_note }}</p>
     {% endif %}
   </div>
   {% endfor %}
@@ -31,10 +31,13 @@
   <p>A rule that fired but whose action never applied — the platform default is a
      real, logged event, not a silent skip.</p>
   {% for o in overrides %}
-  <div style="margin-bottom: 1rem;">
-    <p>Rule <a href="#rule-{{ o.rule_id }}"><code>{{ o.rule_id }}</code></a> fired.
-       Would have done: <em>{{ o.would_have_done }}</em>. Actual: <strong>{{ o.actual }}</strong>.
-       Actor: {{ o.actor }}.</p>
+  <div class="entry">
+    <div class="entry-head">
+      <span class="badge badge-partial">overruled by the {{ o.actor }}</span>
+    </div>
+    <h3 class="entry-title">{{ o.actual }}</h3>
+    <p class="note">Rule <a href="#rule-{{ o.rule_id }}">{{ o.rule_id }}</a> fired and would have
+       <strong>{{ o.would_have_done | lower }}</strong>.</p>
     <blockquote>{{ o.reason }}</blockquote>
   </div>
   {% endfor %}
@@ -45,7 +48,7 @@
      claim &rarr; the rules it produced.</p>
   {% for claim in claims %}
     {% if claim.rules | length > 1 %}
-    <div style="margin-bottom: 1rem;">
+    <div class="entry">
       <blockquote>{{ claim.source.quote | render_quote }}
         <div class="source-cite">{{ claim.source.doc }}, p.{{ claim.source.page }}</div>
       </blockquote>
@@ -63,6 +66,7 @@
      sourced, but the engine deliberately declines to act on it. Linking two
      differently-named Internal factors ourselves would be inventing a mechanism
      the research never states.</p>
+  <div class="table-wrap">
   <table>
     <thead><tr><th>Ticker</th><th>Factor</th><th>Quote</th></tr></thead>
     <tbody>
@@ -82,6 +86,7 @@
       </tr>
     </tbody>
   </table>
+  </div>
 
   <h2>Factor coverage</h2>
   <p><strong>{{ nvda_transcribed_count }} of 28</strong> of NVDA's Light Cone factors are
@@ -95,8 +100,9 @@
      ring badge below); the rest carry weight and source but are marked
      <span class="badge badge-unknown">unknown</span> ring rather than guessed, and are
      excluded from propagation.</p>
+  <div class="table-wrap">
   <table>
-    <thead><tr><th>Factor</th><th>Ring</th><th>NVDA weight</th><th>NVDA direction</th></tr></thead>
+    <thead><tr><th>Factor</th><th>Ring</th><th class="num">NVDA weight</th><th>NVDA direction</th></tr></thead>
     <tbody>
       {% for f in factors %}
       <tr>
@@ -104,10 +110,11 @@
         <td>
           <span class="badge badge-{{ f.ring }}">{{ f.ring }}</span>
         </td>
-        <td>{{ f.exposures.NVDA.weight if f.exposures.NVDA and f.exposures.NVDA.weight else '—' }}</td>
-        <td>{{ f.exposures.NVDA.direction if f.exposures.NVDA else '—' }}</td>
+        <td class="num">{{ f.exposures.NVDA.weight if f.exposures.NVDA and f.exposures.NVDA.weight else '—' }}</td>
+        <td class="nowrap">{{ f.exposures.NVDA.direction if f.exposures.NVDA else '—' }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+  </div>
 {% endblock %}

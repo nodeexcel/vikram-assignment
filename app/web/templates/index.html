@@ -1,22 +1,71 @@
 {% extends "base.html" %}
 {% block title %}Lexo Trading Decision System{% endblock %}
 {% block content %}
-  <h1>Lexo Trading Decision System</h1>
-  <p>A deterministic decision system derived from Lexo's NVIDIA research, showing its
-     own reasoning — including a cross-ticker linkage into Amazon, where the same
-     disclosed event re-rates both positions in opposite directions. Start with what
-     the research concludes, then see every rule and where it came from.</p>
-  <ul>
-    <li><a href="/research">What the research concludes</a> — verdict, stance, both
-        horizons, both scenario tables, the three dates that change the rating.</li>
-    <li><a href="/rules">Rules &amp; sources</a> — every rule with its verbatim
-        source quote, provenance status, and the factor-coverage disclosure.</li>
-    <li>Timeline — step through a scenario's dated events, see what fired and why,
-        accept or reject Tier 2 proposals:
-        <a href="/timeline/guide_holds">Guide Holds</a> (the bull path) ·
-        <a href="/timeline/capex_turns">Capex Turns</a> (the bear path — this is
-        the one with the Tier 2 proposals and the NVDA&darr;/AMZN&uarr; fan-out).</li>
-    <li><a href="/determinism">Determinism check</a> — same inputs, same decisions,
-        shown twice, hashed, compared.</li>
-  </ul>
+  <h1>A research memo, turned into decisions you can audit</h1>
+
+  <p class="lede">The research says hold, and says exactly what would change its
+     mind. This system holds it to that.</p>
+
+  <p class="standfirst">Every rule below was transcribed from Lexo's NVIDIA memo, not
+     invented &mdash; each one carries the page and the sentence it came from. The
+     system decides over time rather than once, and a single disclosed event re-rates
+     both NVIDIA and Amazon, in opposite directions.</p>
+
+  <dl class="facts">
+    <div>
+      <dt>Reference price</dt>
+      <dd>${{ "%.2f"|format(research.reference_price) }}</dd>
+    </div>
+    <div>
+      <dt>Stance</dt>
+      <dd>{{ research.stance }}, {{ research.conviction|lower }} conviction</dd>
+    </div>
+    <div>
+      <dt>Probability-weighted value</dt>
+      <dd>${{ "%.2f"|format(intrinsic.weighted_price) }}</dd>
+    </div>
+    <div>
+      <dt>Gap to price</dt>
+      <dd>{{ intrinsic.weighted_return_pct }}%</dd>
+    </div>
+    <div>
+      <dt>Resolves</dt>
+      <dd>{{ resolution_date }}</dd>
+    </div>
+  </dl>
+
+  <p class="note">Figures as of {{ research.as_of }}. The gap is a three-to-five year
+     intrinsic measure, not a twelve-month expectation &mdash; the memo insists those
+     are different clocks, and so does <a href="/research">the research page</a>.</p>
+
+  <h2>Start here</h2>
+
+  <div class="entry">
+    <h3 class="entry-title"><a href="/research">What the research concludes</a></h3>
+    <p>The verdict and the stance, kept separate. Both scenario tables, the dated
+       triggers that change the rating, and the four kill switches.</p>
+  </div>
+
+  <div class="entry">
+    <h3 class="entry-title"><a href="/rules">Rules and where each came from</a></h3>
+    <p>Eight rules, each with its verbatim quote, document and page. Includes the one
+       rule the memo could not fully source, and an honest count of how much of the
+       factor set was transcribed.</p>
+  </div>
+
+  <div class="entry">
+    <h3 class="entry-title"><a href="/timeline/guide_holds">What the system would do, and when</a></h3>
+    <p>Step through a scenario's dated events and see what fired, why, and what the
+       position became. <a href="/timeline/guide_holds">Guide Holds</a> confirms the
+       guide, buys at full weight, then stops out on two consecutive weekly closes.
+       <a href="/timeline/capex_turns">Capex Turns</a> exits on other companies' capex
+       guidance, and carries the proposals that re-rate Amazon the opposite way to
+       NVIDIA.</p>
+  </div>
+
+  <div class="entry">
+    <h3 class="entry-title"><a href="/determinism">Proof that it is deterministic</a></h3>
+    <p>Both scenarios re-run live and hashed, side by side. The brief asks us to show
+       that it holds rather than assert it.</p>
+  </div>
 {% endblock %}

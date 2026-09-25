@@ -1,58 +1,71 @@
 {% extends "base.html" %}
-{% block title %}Timeline — Lexo{% endblock %}
+{% block title %}{{ scenario_meta.name }} — Lexo{% endblock %}
 {% block content %}
-  <h1>Timeline</h1>
-  <p>
-    Scenario:
+  <h1>{{ scenario_meta.name }}</h1>
+
+  <p class="switcher">
     {% for s in scenarios %}
-      {% if s == scenario %}<strong>{{ s }}</strong>{% else %}<a href="/timeline/{{ s }}">{{ s }}</a>{% endif %}
-      {% if not loop.last %}&middot;{% endif %}
+      {% if s == scenario %}<span class="current">{{ scenario_meta.name }}</span>
+      {% else %}<a href="/timeline/{{ s }}">Switch to {{ other_name }}</a>{% endif %}
     {% endfor %}
   </p>
 
+  <p class="standfirst">{{ scenario_meta.description }}</p>
+
   {% if not entries %}
-  <p>Nothing fired in this scenario.</p>
+  <p class="note">Nothing fired in this scenario.</p>
   {% endif %}
 
   {% for e in entries %}
-  <div id="entry-{{ e.id }}" style="margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid #eee;">
-    <p><strong>{{ e.date }}</strong>
-      {% if e.ticker %}&middot; {{ e.ticker }}{% endif %}
-      &middot; <span class="badge {{ 'badge-derived' if e.kind in ('rule_fired',) else ('badge-partial' if e.kind == 'override' else 'badge-unknown') }}">{{ e.kind }}</span>
-      {% if e.position_after %}
-      &middot; position after: <strong>{{ e.position_after | position_prose }}</strong>
+  <div class="entry" id="entry-{{ e.id }}">
+    <div class="entry-head">
+      <span class="entry-date">{{ e.date }}</span>
+      {% if e.ticker %}<span class="entry-ticker">{{ e.ticker }}</span>{% endif %}
+      <span class="badge {{ 'badge-derived' if e.kind == 'rule_fired' else ('badge-partial' if e.kind == 'override' else 'badge-unknown') }}">{{ e.kind | replace('_', ' ') }}</span>
+      {% if e.id in position_changed_at %}
+      <span class="entry-ticker">position &rarr; {{ e.position_after | position_prose }}</span>
       {% endif %}
-    </p>
+    </div>
 
     {% if e.kind == 'rule_fired' %}
-      <p>{{ e.reason }} &rarr; {{ e.action | action_prose }}</p>
+      <p class="entry-title">{{ e.action | action_prose }}</p>
+      <p class="note">{{ e.reason }}</p>
     {% elif e.kind == 'override' %}
-      <p>The platform's own rule fired here. It would have done: <em>{{ e.would_have_done }}</em>.
-         Instead: <strong>{{ e.action }}</strong>, because {{ e.reason }}</p>
+      <p class="entry-title">{{ e.action }}</p>
+      <p class="note">The platform's own rule fired here and would have
+         <strong>{{ e.would_have_done | lower }}</strong>. It was overruled by the
+         {{ e.actor }}, because {{ e.reason | lower }}</p>
     {% elif e.kind == 'proposal' %}
-      <p>Tier 2 proposal: re-rate <strong>{{ e.ticker }}</strong> <strong>{{ e.action }}</strong> on
-         <code>{{ e.factor_id }}</code>. {{ e.reason }}</p>
-      {% set response = responses_by_proposal.get(e.id) %}
-      {% if response %}
-        <p>&rarr; <strong>{{ response.action }}ed</strong> by {{ response.actor }}.</p>
-      {% else %}
-        <form method="post" action="/timeline/{{ scenario }}/proposal/{{ e.id }}/accept" style="display:inline;">
-          <button type="submit">Accept</button>
-        </form>
-        <form method="post" action="/timeline/{{ scenario }}/proposal/{{ e.id }}/reject" style="display:inline;">
-          <button type="submit">Reject</button>
-        </form>
-      {% endif %}
+      <p class="entry-title">Re-rate {{ e.ticker }} {{ e.action }}</p>
+      <p class="note">{{ e.reason }} Nothing moves until a person decides.</p>
     {% elif e.kind == 'proposal_response' %}
-      <p>Human response to <a href="#entry-{{ e.responds_to }}">proposal #{{ e.responds_to }}</a>:
-         <strong>{{ e.action }}ed</strong> by {{ e.actor }}. Position unchanged — a proposal never
-         mutates a position on its own.</p>
+      <p class="entry-title">{{ e.action|capitalize }}ed by {{ e.actor }}</p>
+      <p class="note">Answers <a href="#entry-{{ e.responds_to }}">the proposal above</a>.
+         The position is unchanged &mdash; a proposal never moves one on its own.</p>
     {% endif %}
 
     {% if e.source %}
     <blockquote>{{ e.source.quote | render_quote }}
-      <div class="source-cite">{{ e.source.doc }}, p.{{ e.source.page }}</div>
+      <div class="source-cite">{{ e.source.doc }}, page {{ e.source.page }}</div>
     </blockquote>
+    {% endif %}
+
+    {# Decision controls come after the evidence, never before it — you should
+       not be asked to accept a re-rate above the quote that justifies it. #}
+    {% if e.kind == 'proposal' %}
+      {% set response = responses_by_proposal.get(e.id) %}
+      {% if response %}
+        <p class="resolved"><strong>{{ response.action|capitalize }}ed</strong> by {{ response.actor }}. The position did not change.</p>
+      {% else %}
+        <div class="actions">
+          <form method="post" action="/timeline/{{ scenario }}/proposal/{{ e.id }}/accept">
+            <button type="submit">Accept this re-rate</button>
+          </form>
+          <form method="post" action="/timeline/{{ scenario }}/proposal/{{ e.id }}/reject">
+            <button type="submit">Reject</button>
+          </form>
+        </div>
+      {% endif %}
     {% endif %}
   </div>
   {% endfor %}
