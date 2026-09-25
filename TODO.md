@@ -14,7 +14,7 @@ Spec for every item below: `docs/specs/FEAT-20260924-1250-lexo-trading-decision-
 Architecture decision: `docs/adr/ADR-20260924-1250-tiered-decision-engine.md`
 Discussion history and rationale: `docs/decisions/notepad.md`
 
-- [o] FEAT-20260924-1250-01 — Scaffold the project (uv, FastAPI, pytest) and deploy an empty page to Render before any engine code, so the public URL exists from the start and Friday's deploy is a redeploy rather than a first attempt
+- [x] FEAT-20260924-1250-01 — Scaffold the project (uv, FastAPI, pytest) and deploy an empty page to Render before any engine code, so the public URL exists from the start and Friday's deploy is a redeploy rather than a first attempt. Live at https://vikram-assignment.onrender.com/ — verified: all 9 routes return 200, /health reports fixtures loaded, /determinism shows identical on both scenarios in production [2026-09-25 14:10]
 - [x] ISS-20260924-1250-02 — Extract the NVDA and AMZN PDF text into `sources/text/` via a committed script, gitignored output, so the transcription reference survives session restarts (it was lost once already) [2026-09-24 13:06]
 - [x] FEAT-20260924-1250-03 — Define the fixture schema in Pydantic with fail-fast validation: every claim carries doc, page and verbatim quote, and the app refuses to start if any rule or factor lacks a source [2026-09-24 13:12]
 - [x] FEAT-20260924-1250-04 — Transcribe the NVDA fixtures by hand: verdict and stance, execution plan, the three dates, both scenario tables, the decision-driving weighted factors, and the four kill switches — each with page and quote [2026-09-24 14:45]
