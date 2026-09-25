@@ -1,6 +1,6 @@
 # Lexo trading assignment — submission
 
-**Live:** _<Render URL>_
+**Live:** https://vikram-assignment.onrender.com/
 **Repo:** https://github.com/nodeexcel/vikram-assignment
 
 A deterministic decision system built from the NVIDIA memo, theme report and factor
