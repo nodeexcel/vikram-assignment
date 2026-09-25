@@ -97,6 +97,9 @@ not in the runtime.
 
 ## Where the thinking is, if you want it
 
+- `PROJECT.md` — the whole project in one document: task, reasoning, architecture,
+  timeline, findings, limits. If you only open one file, open that one
+
 - `HOW_IT_WORKS.md` (also at `/how-it-works`) — how it works, what it buys, and the
   seven approaches I considered and rejected, including the one that would have caught
   one of my own bugs statically

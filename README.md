@@ -119,6 +119,8 @@ reports healthy, stops gracefully in ~0.6s because `exec` in the entrypoint lets
   what was rejected and why
 - `docs/specs/FEAT-20260924-1250-lexo-trading-decision-system.md` — the build spec
 - `docs/adr/ADR-20260924-1250-tiered-decision-engine.md` — the architecture decision
+- `PROJECT.md` — **start here.** The whole project in one document: the task, why it
+  was built this way, how it works, when the work happened, and what came out
 - `SUBMISSION.md` — the half-page note for reviewers: what to look at first, and why
 - `TODO.md` — every item, including the defects found and closed along the way
 - `HOW_IT_WORKS.md` — how the system works, why it is built this way, and the
