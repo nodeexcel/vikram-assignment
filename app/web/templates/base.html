@@ -162,6 +162,23 @@
     .facts dt { font-size: var(--t--1); color: var(--ink-2); margin-bottom: 0.15rem; }
     .facts dd { margin: 0; font-size: var(--t-1); font-family: var(--serif); font-weight: 500; }
 
+    /* Same grid as .facts, without the border/margin meant for a top-level strip —
+       this one nests inside an .entry card, which already provides its own
+       separation (.entry + .entry). Reusing .facts as-is doubled up a divider and
+       left a dead gap (found in final-review QA). */
+    .hash-facts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(9rem, auto));
+      gap: 0.5rem 2.5rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      max-width: none;
+    }
+    .hash-facts > div { margin-bottom: 0; }
+    .hash-facts dt { font-size: var(--t--1); color: var(--ink-2); margin-bottom: 0.15rem; }
+    .hash-facts dd { margin: 0; font-size: var(--t-1); font-family: var(--serif); font-weight: 500; }
+
     /* ── Citation: the most carefully made object here ──────────────────── */
 
     blockquote {

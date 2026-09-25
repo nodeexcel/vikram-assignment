@@ -13,7 +13,7 @@ happened, and what came out. Everything else in the repo is detail this points a
   and a partner. Two different bars, both have to be met.
 - **Live** — _<Render URL>_
 - **Repo** — https://github.com/nodeexcel/vikram-assignment
-- **Status** — 49 of 51 tracked items closed, 74 tests passing. Outstanding: the
+- **Status** — 53 of 55 tracked items closed, 74 tests passing. Outstanding: the
   deploy itself, and self-hosting the web fonts.
 - **Built** — 23–25 September 2026. One day of reading and design, one day of
   building, a half day of review and polish.
@@ -24,7 +24,7 @@ happened, and what came out. Everything else in the repo is detail this points a
 | Web | 1,267 lines, server-rendered, no client framework |
 | Tests | 865 lines, 74 tests, decision logic only |
 | Fixtures | 793 lines of hand-transcribed claims, each with a page and a quote |
-| Documentation | 2,306 lines |
+| Documentation | 2,581 lines |
 
 ---
 
@@ -318,7 +318,7 @@ from it, and the reviewer note.
 
 ### What was found along the way
 
-Fifty-one tracked items: 18 features, 17 bugs, 15 issues, 1 wishlist. **Most of the bugs
+Fifty-five tracked items: 19 features, 18 bugs, 17 issues, 1 wishlist. **Most of the bugs
 were found in our own work, by checking claims against the source rather than reading
 the code.** The pattern is worth stating because it is the same failure repeating:
 

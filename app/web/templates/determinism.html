@@ -12,7 +12,7 @@
       <span class="badge {{ 'badge-derived' if c.match else 'badge-added' }}">{{ 'identical' if c.match else 'DIFFERENT' }}</span>
     </div>
     <h3 class="entry-title">{{ c.scenario | replace('_', ' ') }}</h3>
-    <dl class="facts">
+    <dl class="hash-facts">
       <div><dt>First run</dt><dd class="hash">{{ c.hash_a }}</dd></div>
       <div><dt>Second run</dt><dd class="hash">{{ c.hash_b }}</dd></div>
     </dl>

@@ -11,7 +11,10 @@ description: >-
   deliberately so one close lands under $195.00 and does NOT stop the position
   out, because the following week closes back above and breaks the streak —
   which is the memo's own stated reason for requiring two closes: "so a single
-  volatile week around an earnings print does not trigger the exit."
+  volatile week around an earnings print does not trigger the exit." Only
+  events that changed something appear below; the full week-by-week price path,
+  including the near-miss close and the week that breaks it, is in
+  How it works, section 4.
 events:
   - date: 2026-11-17
     kind: guidance
