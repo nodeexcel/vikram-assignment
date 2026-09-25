@@ -3,7 +3,7 @@
 Turns the Lexo NVIDIA research artifacts into a deterministic decision system that
 shows its reasoning.
 
-**Deployed:** _<paste the Render URL here once the service is live>_
+**Deployed:** https://vikram-assignment.onrender.com/
 
 ---
 

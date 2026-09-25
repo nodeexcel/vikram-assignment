@@ -11,10 +11,10 @@ happened, and what came out. Everything else in the repo is detail this points a
   deterministic decision system and shows its reasoning.
 - **Who for** — an evaluation exercise set by Lexo, reviewed by their technical lead
   and a partner. Two different bars, both have to be met.
-- **Live** — _<Render URL>_
+- **Live** — https://vikram-assignment.onrender.com/
 - **Repo** — https://github.com/nodeexcel/vikram-assignment
-- **Status** — 53 of 55 tracked items closed, 74 tests passing. Outstanding: the
-  deploy itself, and self-hosting the web fonts.
+- **Status** — 54 of 55 tracked items closed, 74 tests passing. Outstanding:
+  self-hosting the web fonts.
 - **Built** — 23–25 September 2026. One day of reading and design, one day of
   building, a half day of review and polish.
 
@@ -364,7 +364,7 @@ because the prose reads like a spec and copying it feels like encoding it.
 
 ## 9. What's next
 
-Immediately: deploy, and self-host the fonts.
+Immediately: self-host the fonts.
 
 Beyond that, in the order the design would want them:
 
